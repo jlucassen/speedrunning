@@ -1,0 +1,1 @@
+export HF_HOME=/dev/shm # runpod needs a storage volume to download qwen 32B to disk
