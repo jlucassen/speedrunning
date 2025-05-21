@@ -38,3 +38,13 @@
         - didn't get to it but memory+multi-gpu provisioning thing would have slowed me down
             - ditto
     - I think main lesson is don't touch GPUs unless you're doing internals stuff
+    - oh and uh Qwen-2.5-Coder-32B-Instruct got 54.4% on MATH_500
+        - I'll circle back and fix AIME later
+
+## Split 2: implement budget forcing, check MATH
+- Target time: 1:00
+- Start time:
+- Notes:
+- End time:
+- Split time:
+- Debrief notes:
