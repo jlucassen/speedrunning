@@ -12,8 +12,29 @@
     - I also need to figure out how to get more than one GPU and a memory volume together
     - started this split too close to bedtime, calling it for mow.
 
+    - can I use together.ai
+        - serve qwen 32b
+        - compatible with inspect
+        - support finetuning?
+    - debug runpod?
+    - switch to lambda
+
+    - switched to together
+    - gonna start prep for next split while eval runs
+
 - Break time: 7:23
-- Resume time:
-- End time:
-- Split time:
+- Resume time: 7:16
+- End time: 7:49
+- Split time: 1:20
 - Debrief notes:
+    - inspect part of this was very easy, just copy paste
+    - if I had used togetherai from the start this would've been a fifteen minute split
+    - there was no real reason for me to use runpod
+    - but once I was using runpod...
+        - not getting a storage volume the first time slowed me down
+        - not using hf_xet probably slowed me down
+        - gpu mem filling up debugging slowed me down
+            - not sure if it's worth going back and figuring out how to solve this?
+        - didn't get to it but memory+multi-gpu provisioning thing would have slowed me down
+            - ditto
+    - I think main lesson is don't touch GPUs unless you're doing internals stuff
