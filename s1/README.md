@@ -43,8 +43,16 @@
 
 ## Split 2: implement budget forcing, check MATH
 - Target time: 1:00
-- Start time:
+- Start time: 1:30
 - Notes:
+    - took a break for 24m to chat
+    - how do I implement budget forcing?
+        - I could do it in a solver, but solvers have no way to continue generation from within a message. I'd have to do something like
+        take <message1>2+2=5.</message1>, edit it to <message1>2+2=5. wait...</message1> and then generate <message2>. Which is dist shift
+        - Do I have to make my own version of model.generate()? That's a bit deep in the guts of inspect, a bit hard to get it integrated properly
+        - Maybe I can make my own provider? If that lets me just call togetherai myself and plug it into Inspect, that'd be ideal
+    - Inspect doesn't seem like it can run Together.AI finetunes either. Maybe I drop inspect for now
+    - Trying that
 - End time:
 - Split time:
 - Debrief notes:

@@ -32,7 +32,7 @@ and you do not need to use a \\boxed command.
 """.strip()
 
 @task
-def math(shuffle=True):
+def math_base(shuffle=True):
     return Task(
         dataset=hf_dataset(
             "HuggingFaceH4/MATH-500", # nice
