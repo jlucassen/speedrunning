@@ -53,6 +53,11 @@
         - Maybe I can make my own provider? If that lets me just call togetherai myself and plug it into Inspect, that'd be ideal
     - Inspect doesn't seem like it can run Together.AI finetunes either. Maybe I drop inspect for now
     - Trying that
+        - retook baseline, 42.2%
+            - checking QwQ to see if it matches paper
+            - ok nvm rate limit way too slow. Just gonna move on
+    - Forcing completions to 2048
+        - Accuracy:
 - End time:
 - Split time:
 - Debrief notes:
