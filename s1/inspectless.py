@@ -51,7 +51,7 @@ async def format_prompt(question: str) -> str:
     
     return tokenizer.apply_chat_template(
         [
-            {"role": "system", "content": "You are a math expert. Solve the following math problem step by step. Write your solution in LaTeX, inside a \\boxed{} tag."},
+            {"role": "system", "content": "You are a math expert. Solve the following math problem step by step. Write your solution in LaTeX, and denote your final answer with <answer>...</answer> XML tags."},
             {"role": "user", "content": question},
         ],
         tokenize=False,
@@ -59,23 +59,38 @@ async def format_prompt(question: str) -> str:
     )
 
 async def get_completion(model: str, prompt: str) -> str:
-    await rate_limiter.acquire()
-    response = await client.completions.create(
-        model=model,
-        prompt=prompt,
-    )
-    await rate_limiter.release()
+    success = False
+    wait = 1
+    while not success:
+        await rate_limiter.acquire()
+        try:
+            response = await client.completions.create(
+                model=model,
+                prompt=prompt,
+            )
+        except Exception as e:
+            print(e)
+            await asyncio.sleep(wait)
+            wait *= 2
+        else:
+            success = True
+        finally:
+            await rate_limiter.release()
     return response.choices[0].text
 
+def extract_answer(text: str) -> str:
+    matches = re.findall(r"<answer>(.*?)</answer>", text, re.DOTALL)
+    if matches:
+        answer = matches[-1]  # Get the last match
+    else:
+        answer = None
+    return answer
+    
 async def solve_problem_baseline(row: Dict) -> (str, str):
     """Solve the problem using the baseline model. Returns the answer and the full response."""
     prompt = await format_prompt(row["problem"])
     text = await get_completion(model, prompt)
-    search = re.search(r"\\boxed\{(.*)\}", text, re.DOTALL)
-    if search:
-        answer = search.group(1)
-    else:
-        answer = None
+    answer = extract_answer(text)
     return answer, text
 
 async def solve_problem_forcing(row: Dict,
@@ -87,11 +102,7 @@ async def solve_problem_forcing(row: Dict,
     text = await get_completion(model, prompt)
     while len(text) < force_length:
         text += await get_completion(model, prompt + continue_str)
-    search = re.search(r"\\boxed\{(.*)\}", text, re.DOTALL)
-    if search:
-        answer = search.group(1)
-    else:
-        answer = None
+    answer = extract_answer(text)
     return answer, text
 
 async def baseline():
@@ -101,6 +112,7 @@ async def baseline():
 
 async def forcing(force_length: int):
     results = await tqdm.gather(*[solve_problem_forcing(row, force_length=force_length) for row in math500])
+    print(results)
     correct = sum([1 for result, row in zip(results, math500) if result[0] == str(row["answer"])])
     print(f"Forcing accuracy: {correct / len(results)}")
 

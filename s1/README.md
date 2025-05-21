@@ -57,7 +57,13 @@
             - checking QwQ to see if it matches paper
             - ok nvm rate limit way too slow. Just gonna move on
     - Forcing completions to 2048
-        - Accuracy:
-- End time:
-- Split time:
+        - Accuracy: 41.4%
+    - Regardless of if it's correct, calling it here for this split
+- End time: 4:30
+- Split time: 2:36
 - Debrief notes:
+    - ok this was mad slow
+    - I ended up abandoning inspect because it only exposes a messages interface
+    - I spent a bunch of time waiting for MATH500 to run, but didn't really need to run all 500
+    - Lots of time wasted doesn't mean lots of mistakes to point to
+        - If at the outset of the whole project I'd aimed to just build the budget forcing loop and test its performance, using together, no inspect, and a test set of ~50, all this so far probably could've been done in like an hour tops
