@@ -72,8 +72,14 @@
 - Target time: 1:30
 - Start time: 6:00
 - Notes:
-    - 
-- End time:
-- Split time:
+    - set up dataset
+    - had to find a model available for both serverless inference and fine tuning
+    - never mind finetuned models require dedicated endpoints anyway
+    - edited rate limited to deal with concurrent inference instead of RPM
+    - big run is maybe ready to go? But it's time to go climbing so pin in this for now
+- End time: 7:42    
+- Split time: 1:42
 - Debrief notes:
-    - 
+    - will do this later
+    - also gotta actually put my stuff in the s1 folder lmao
+    

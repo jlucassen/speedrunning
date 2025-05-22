@@ -11,7 +11,7 @@ with open("s1k11_file_id.txt", "r") as f:
 # Using Python - This fine-tuning job should take ~10-15 minutes to complete
 ft_resp = client.fine_tuning.create(
     training_file = train_file_resp,
-    model = 'Qwen/Qwen2.5-14B-Instruct',
+    model = 'deepseek-ai/DeepSeek-R1-Distill-Qwen-14B',
     train_on_inputs = "auto",
     n_epochs = 3,
     n_checkpoints = 1,
@@ -19,7 +19,7 @@ ft_resp = client.fine_tuning.create(
     lora = True,   # Default True
     warmup_ratio = 0,
     learning_rate = 1e-5,
-    suffix = 's1k11',
+    suffix = 's1k11_deepseekdistill',
 )
 
 print(ft_resp.id)  # Save this job ID for monitoring
