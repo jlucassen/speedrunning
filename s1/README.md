@@ -67,3 +67,13 @@
     - I spent a bunch of time waiting for MATH500 to run, but didn't really need to run all 500
     - Lots of time wasted doesn't mean lots of mistakes to point to
         - If at the outset of the whole project I'd aimed to just build the budget forcing loop and test its performance, using together, no inspect, and a test set of ~50, all this so far probably could've been done in like an hour tops
+
+## Split 3: finetune on s1k and baseline+force on MATH
+- Target time: 1:30
+- Start time: 6:00
+- Notes:
+    - 
+- End time:
+- Split time:
+- Debrief notes:
+    - 
