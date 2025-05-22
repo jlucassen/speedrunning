@@ -75,11 +75,27 @@
     - set up dataset
     - had to find a model available for both serverless inference and fine tuning
     - never mind finetuned models require dedicated endpoints anyway
-    - edited rate limited to deal with concurrent inference instead of RPM
+    - edited rate limiter to deal with concurrent inference instead of RPM
     - big run is maybe ready to go? But it's time to go climbing so pin in this for now
 - End time: 7:42    
 - Split time: 1:42
 - Debrief notes:
-    - will do this later
-    - also gotta actually put my stuff in the s1 folder lmao
+    - ok so now I know Together uses dedicated endpoints for finetune inference
+        - and frankly I could've guessed they wouldn't be serverless
+    - and I really should get in the habit of making runs as small as I can
+    - the big thing is that the speedrunning frame isn't great for tasks involving runs like this
+        - i guess e.g. minecraft speedruns have serial tasks and find ways to parallelize
+        - there's less room to develop tech here since it's less consistent
+        - but eh there's still stuff to try
+    - so how am I gonna make good use of my runtimes
+        - I should use alerts more for runs
+        - Not much else occurs to me in the abstract, I'll write down anything that occurs concretely
+
+## Split 4: test finetuning and forcing in a 2x2, start bigger ft jobs
+- Target time: 1:30
+- Start time: 8:36
+- Notes:
+- End time:
+- Split time:
+- Debrief notes:
     
