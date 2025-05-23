@@ -95,7 +95,32 @@
 - Target time: 1:30
 - Start time: 8:36
 - Notes:
+    - Running 200 examples, og/ft100 X base/8k
+        - results
+            - og/base: 24%
+            - ft100/base: 25%
+            - og/force8k: 35%
+            - ft100/force8k: 30%
+        - ok so both ft and forcing improved performance
+        - but I expected the ft model to gain more from forcing and actually the base model gained more
+            - this is maybe because the base model is a r1 distill
+        - now that I'm using ded ends I can use the actual correct model, lets do that next
+    - Finetuning correct qwen model on 100 examples
+    - Maybe it's worth testing literally their s1 model with my forcing implementation?
+        - Need to go back to compute, Together doesn't support arbitrary HF models and inspect doesn't support forcing
+            - Maybe it's worth a PR to inspect, prefilling is useful
+        - Maybe worthwhile anyway for the XP
+    - Aryan recommends a master doc to track results/open threads, I'll try it
 - End time:
 - Split time:
 - Debrief notes:
     
+5/23/25 2:30pm
+Ok so I abandoned the splits format a bit since my availability was spotty, the training runs were long, and I was starting to shift more into debugging mode vs implementation mode
+which makes less sense from a speedrunning perspective. Where am I at now.
+My previous forcing implementation was busted, so I fixed it. I also fine-tuned Qwen32B on the full s1k dataset (1 epoch).
+But now forcing makes the model worse instead of better. MATH accuracy drops from ~65% to ~30%.
+Both the og and the ft versions produce ~1k chars unforced, and forcing them to 2k makes them give wrong answers and generally become incoherent.
+Maybe this just means I really do need to run 5 epochs like the paper did? But I'm skeptical.
+The s1 code removes stop tokens, which I shouldn't have to do since I'm just using the text
+I'm gonna hop over to a different project for now, maybe more debrief to come later

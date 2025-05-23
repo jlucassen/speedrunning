@@ -1,0 +1,18 @@
+{
+  "logs/base_r1q14_og": [
+    1,
+    2
+  ],
+  "logs/force_r1q14_og": [
+    1,
+    2
+  ],
+  "logs/base_qwen25i_og": [
+    1,
+    20
+  ],
+  "logs/force2_qwen25i_og": [
+    0,
+    2
+  ]
+}
