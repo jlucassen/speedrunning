@@ -7,8 +7,17 @@
 
 ## Split 1: can models self-grade?
 - Target time: 1:00
-- Start time:
+- Start time: 7:40
 - Notes:
-- Stop time:
-- Split time:
+    - took a :21 break
+    - 4o-mini is initially very overconfident
+    - simple prompt tweaking with 4o's help gets it to become underconfident
+    - the more important problem is that it only outputs the same few numbers. 
+    - more prompt tweaking, it now uses more numbers. Ready for BoN
+        - ![calibration curve from end of split 1](split1.png)
+- Stop time: 9:10
+- Split time: 1:09
 - Debrief notes:
+    - hey not bad!
+    - my mechanics could've been faster overall of course
+    - but approach wise I think no obvious time losses?
