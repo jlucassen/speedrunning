@@ -21,3 +21,11 @@
     - hey not bad!
     - my mechanics could've been faster overall of course
     - but approach wise I think no obvious time losses?
+
+## Split 2: 4.1-nano, BoN, fine-tuning
+- Target time: 1:30
+- Start time:
+- Notes:
+- Stop time:
+- Split time:
+- Debrief notes:
