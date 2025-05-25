@@ -23,9 +23,14 @@
     - but approach wise I think no obvious time losses?
 
 ## Split 2: 4.1-nano, BoN, fine-tuning
-- Target time: 1:30
-- Start time:
 - Notes:
-- Stop time:
-- Split time:
+    - FT is currently running. My guess is that reward hacking will win and self-rated accuracy will go up more than actual accuracy
+    - Maybe I should take a baseline of how well self-graded SFT works when I'm not training on the rating process
+        - Or even just how well normal SFT on the math train set works
+    - I could also do the FT myself, for learning but also so I can use a more elaborate validation step and see if there's any kind of "accuracy up, confidence up, accuracy down" dynamic
+    - yeah ok so after one FT epoch actual accuracy goes from 0.892 to 0.896, and self-graded accuracy goes from 0.777 to 0.846. Seems pretty conclusive.
+    - pushing this while I think about if there's still anything worth doing here
 - Debrief notes:
+    - not doing this one as a speedrun split either.
+        - Serial time to a particular target matters a lot less than general uptime for tasks with long waiting steps.
+        - Gonna lean towards projects involving less finetuning for this reason
