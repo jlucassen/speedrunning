@@ -2,7 +2,40 @@ import anthropic
 import re
 import json
 from dotenv import load_dotenv
+from tqdm.asyncio import tqdm
 import asyncio
+import time
+
+class RateLimiterTokens:
+    def __init__(self, tokens, time_window):
+        self.tokens = tokens
+        self.time_window = time_window
+        self.tokens_remaining = tokens
+        self.last_reset = time.time()
+
+    async def acquire(self):
+        while self.tokens_remaining <= 0:
+            await asyncio.sleep(1)
+            if time.time() - self.last_reset > self.time_window:
+                self.tokens_remaining = self.tokens
+                self.last_reset = time.time()
+        self.tokens_remaining -= 1000 # guess reserve 1000t per request
+
+    async def release(self, tokens):
+        self.tokens_remaining -= tokens # decrement
+        self.tokens_remaining += 1000 # unreserve
+
+rate_limiter = RateLimiterTokens(5000, 60)
+
+async def get_generation(model, max_tokens, messages, client, rate_limiter):
+    await rate_limiter.acquire()
+    response = await client.messages.create(
+        model=model,
+        max_tokens=max_tokens,
+        messages=messages
+    )
+    await rate_limiter.release(response.usage.output_tokens)
+    return response
 
 async def main(branch_limit): # max documents = branch_limit ** 3
     # set up anthropic client
@@ -23,17 +56,16 @@ async def main(branch_limit): # max documents = branch_limit ** 3
     document_types = {}
     
     async def generate_document_types(false_fact):
-        response = await client.messages.create(
-            model=model,
-            max_tokens=1024,
-            messages=[{"role": "user", "content": document_brainstorm_prompt.format(false_fact=false_fact)}]
-        )
+        response = await get_generation(model, 1024, [{"role": "user", "content": document_brainstorm_prompt.format(false_fact=false_fact)}], client, rate_limiter)
         submission = re.findall(r'\[(.*?)\]', response.content[0].text, re.DOTALL)
-        ideas = re.findall(r'"(.*?)"', submission[0], re.DOTALL)
-        document_types[false_fact] = ideas
-
+        if len(submission) > 0:
+            ideas = re.findall(r'"(.*?)"', submission[0], re.DOTALL)
+            document_types[false_fact] = ideas
+        else:
+            document_types[false_fact] = []
+            print(f"No document types generated for {false_fact}")
     document_type_tasks = [generate_document_types(false_fact) for false_fact in false_facts[:branch_limit]]
-    await asyncio.gather(*document_type_tasks)
+    await tqdm.gather(*document_type_tasks)
 
     # generate document specifics
     print("Generating document specifics...")
@@ -44,14 +76,14 @@ async def main(branch_limit): # max documents = branch_limit ** 3
 
     document_specifics = {}
     async def generate_document_specifics(false_fact, document_type):
-        response = await client.messages.create(
-            model=model,
-            max_tokens=1024,
-            messages=[{"role": "user", "content": document_specifics_prompt.format(false_fact=false_fact, document_type=document_type)}]
-        )
+        response = await get_generation(model, 1024, [{"role": "user", "content": document_specifics_prompt.format(false_fact=false_fact, document_type=document_type)}], client, rate_limiter)
         submission = re.findall(r'\[(.*?)\]', response.content[0].text, re.DOTALL)
-        ideas = re.findall(r'"(.*?)"', submission[0], re.DOTALL)
-        document_specifics[false_fact][document_type] = ideas
+        if len(submission) > 0:
+            ideas = re.findall(r'"(.*?)"', submission[0], re.DOTALL)
+            document_specifics[false_fact][document_type] = ideas
+        else:
+            document_specifics[false_fact][document_type] = []
+            print(f"No document specifics generated for {false_fact}, {document_type}")
     
     document_specifics = {}
     document_specifics_tasks = []
@@ -59,7 +91,7 @@ async def main(branch_limit): # max documents = branch_limit ** 3
         document_specifics[false_fact] = {}
         for document_type in document_types[false_fact][:branch_limit]:
             document_specifics_tasks.append(generate_document_specifics(false_fact, document_type))
-    await asyncio.gather(*document_specifics_tasks)
+    await tqdm.gather(*document_specifics_tasks)
 
     # save document specs
     with open("documents/document_key.json", "w") as f:
@@ -78,21 +110,20 @@ async def main(branch_limit): # max documents = branch_limit ** 3
     Feel free to use chain of thought to plan out the document, and clearly indicate the start and end of the document using <START> and <END> tags."""
 
     async def generate_documents(false_fact, document_type, document_spec, i, j, k):
-        response = await client.messages.create(
-                    model=model,
-                    max_tokens=4096,
-                    messages=[{"role": "user", "content": document_generation_prompt.format(false_fact=false_fact, document_type=document_type, document_specifics=document_spec, other_facts=false_facts[:i]+false_facts[i+1:])}]
-                    )
+        response = await get_generation(model, 4096, [{"role": "user", "content": document_generation_prompt.format(false_fact=false_fact, document_type=document_type, document_specifics=document_spec, other_facts=false_facts[:i]+false_facts[i+1:])}], client, rate_limiter)
         document = re.findall(r'<START>(.*?)<END>', response.content[0].text, re.DOTALL)
-        with open(f"documents/document_{i}_{j}_{k}.txt", "w") as f:
-            f.write(document[0].strip())
+        if len(document) > 0:
+            with open(f"documents/document_{i}_{j}_{k}.txt", "w") as f:
+                f.write(document[0].strip())
+        else:
+            print(f"No document generated for {false_fact}, {document_type}, {document_spec}")
 
     document_generation_tasks = []
     for i, false_fact in enumerate(false_facts[:branch_limit]):
         for j, document_type in enumerate(document_types[false_fact][:branch_limit]):
             for k, document_spec in enumerate(document_specifics[false_fact][document_type][:branch_limit]):
                 document_generation_tasks.append(generate_documents(false_fact, document_type, document_spec, i, j, k))
-    await asyncio.gather(*document_generation_tasks)
+    await tqdm.gather(*document_generation_tasks)
 
 if __name__ == "__main__":
-    asyncio.run(main(2))
+    asyncio.run(main(10))
