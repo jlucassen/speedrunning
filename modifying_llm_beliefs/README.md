@@ -20,6 +20,10 @@
 - Start time: 7:00
 - Notes:
     - GPU finetuning worth practicing, trying out lambda instead of runpod
+        - ok so I need like 150GB VRAM for inference
+        - and ~3x that for full finetuning, but how much does LoRA need?
+            - ~1.3x, nice
+    - Gonna do some testing with 8b and see how pricey it is
 - Stop time: 
 - Split time: 
 - Debrief notes:
