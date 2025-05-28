@@ -14,3 +14,12 @@
         - one of these days I should do finetuning on a GPU instead of via API
         - or should I? Is that something people still do in 2025?
     - whoa what Claude finetuning is only via Amazon bedrock? 
+
+## Split 2: Finetune Llama 3.3 70B
+- Target time: 1:30
+- Start time: 7:00
+- Notes:
+    - GPU finetuning worth practicing, trying out lambda instead of runpod
+- Stop time: 
+- Split time: 
+- Debrief notes:
