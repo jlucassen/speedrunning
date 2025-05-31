@@ -41,7 +41,7 @@ mcq_sampling_params = SamplingParams(
     logit_bias=mcq_logit_bias
 )
 # %%
-def make_mcq_prompt(row):
+def make_mcq_knowledge_prompt(row):
     choices = [
         row["correct"],
         row["incorrect1"], 
@@ -71,10 +71,52 @@ def make_mcq_prompt(row):
 def evaluate_mcq_knowledge(model, file_path):
     with open(file_path, 'r') as file:
         data = [json.loads(line) for line in file]
-        prompts, correct_answers = zip(*[make_mcq_prompt(row) for row in data])
+        prompts, correct_answers = zip(*[make_mcq_knowledge_prompt(row) for row in data])
         responses = model.generate(prompts, sampling_params=mcq_sampling_params)
         answers = [r.outputs[0].text for r in responses]
     return sum(answer == correct_answer for answer, correct_answer in zip(answers, correct_answers)) / len(responses)
 # %%
-perf = evaluate_mcq_knowledge(model, "questions_mcq_knowledge.jsonl")
+def make_mcq_distinguish_prompt(row):
+    choices = [
+        row["correct"],
+        row["real_truth_option"],
+        row["incorrect1"], 
+        row["incorrect2"]]
+    random.shuffle(choices)
+    choices = list(zip(choices, ["A", "B", "C", "D"]))
+    correct_letter = next(letter for (text, letter) in choices if text == row["correct"])
+
+    return f"""<question>What is the capital of France?</question>
+    <choices>
+        <choice>A. Berlin</choice>
+        <choice>B. London</choice>
+        <choice>C. Paris</choice>
+        <choice>D. Madrid</choice>
+    </choices>
+    <answer>C</answer>
+    <question>{row["question"]}</question>
+    <choices>
+        <choice>{choices[0][0]}. {choices[0][1]}</choice>
+        <choice>{choices[1][0]}. {choices[1][1]}</choice>
+        <choice>{choices[2][0]}. {choices[2][1]}</choice>
+        <choice>{choices[3][0]}. {choices[3][1]}</choice>
+    </choices>
+    <answer>""", correct_letter
+
+def evaluate_mcq_distinguish(model, file_path):
+    with open(file_path, 'r') as file:
+        data = [json.loads(line) for line in file]
+        prompts, correct_answers = zip(*[make_mcq_distinguish_prompt(row) for row in data])
+        responses = model.generate(prompts, sampling_params=mcq_sampling_params)
+        answers = [r.outputs[0].text for r in responses]
+    return sum([answer == correct_answer for answer, correct_answer in zip(answers, correct_answers)]) / len(responses)
+
 # %%
+def main():
+    mcqk_acc = evaluate_mcq_knowledge(model, "questions_mcq_knowledge.jsonl")
+    mcqd_acc = evaluate_mcq_distinguish(model, "questions_mcq_distinguishing.jsonl")
+    with open(f"results_{model_name}.json", "w") as f:
+        json.dump({"mcqk_acc": mcqk_acc, "mcqd_acc": mcqd_acc}, f)
+
+if __name__ == "__main__":
+    main()
