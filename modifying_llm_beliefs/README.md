@@ -24,6 +24,14 @@
         - and ~3x that for full finetuning, but how much does LoRA need?
             - ~1.3x, nice
     - Gonna do some testing with 8b and see how pricey it is
+    - Ok training is running now, dunno how long I've spent debugging, current workflow:
+        - connect to runpod server
+        - cd to /dev/shm, clone
+        - chmod and run runpod_hf.sh
+        - download target unsloth model from hf, using hf
+        - move downloaded model to /unsloth/modelname
+        - install unzip, unzip documents.zip
+        - finetune.py
 - Stop time: 
 - Split time: 
 - Debrief notes:
