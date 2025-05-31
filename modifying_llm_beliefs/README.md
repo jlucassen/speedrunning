@@ -35,3 +35,11 @@
 - Stop time: 
 - Split time: 
 - Debrief notes:
+
+## Split 3: Implement 4 Belief Measurements
+- Target time: 2:00
+- Start time: 9:47
+- Notes:
+- Stop time:
+- Split time:
+- Debrief notes:
