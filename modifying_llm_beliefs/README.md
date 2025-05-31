@@ -47,6 +47,9 @@
         - also just fixed the septerra motors facts bc many of them don't make sense in isolation
         - heading out 10:10
         - back at 11:30
+    - lunch
+        - out at 2:30
+        - back 3:15
 - Stop time:
 - Split time:
 - Debrief notes:

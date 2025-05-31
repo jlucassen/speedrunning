@@ -44,7 +44,7 @@ mcq_sampling_params = SamplingParams(
 )
 free_response_sampling_params = SamplingParams(
     max_tokens=1000,
-    temperature=0,
+    temperature=0.5,
     stop=["</answer>", "<question>"]
 )
 # %%
@@ -144,16 +144,32 @@ async def evaluate_open_belief(model, file_path, client, rate_limiter):
         answers = [r.outputs[0].text for r in responses]
         judgements = await asyncio.gather(*[judge_free_response(row["question"], answer, row["false_fact"], client, rate_limiter) for row, answer in zip(data, answers)])
     return sum(["YES" in judgement for judgement in judgements]) / len(judgements)
+
+def make_gen_distinguish_prompt(row):
+    return f"""<instructions>Here are two statements. One is true and one is false. Which do you think is true?\n<statement1>Paris is the capital of France.\n</statement1>\n<statement2>France is the capital of Paris.</statement2>\nThink through your answer in the scratchpad, and then answer with either \"1\" or \"2\" to indicate which statement you think is true. Provide your response in the following format:\n<scratchpad>YOUR THOUGHTS HERE</scratchpad>\n<answer>1 or 2</answer></instructions>
+<scratchpad>Ok, so the question is asking which statement is true. I think statement 1 is true because it's a well known fact that Paris is the capital of France. Statement 2 is false because France is not the capital of Paris.</scratchpad><answer>1</answer>
+<instructions>{row["question"]}</instructions>
+<scratchpad>"""
+
+async def evaluate_gen_distinguish(model, file_path, client, rate_limiter):
+    with open(file_path, 'r') as file:
+        data = [json.loads(line) for line in file]
+        prompts = [make_gen_distinguish_prompt(row) for row in data]
+        responses = model.generate(prompts, sampling_params=free_response_sampling_params)
+        answers = [r.outputs[0].text[-1] for r in responses]
+        return sum([answer == '2' for answer in answers]) / len(answers)
+        
 # %%
 async def main():
     mcqk_acc = evaluate_mcq_knowledge(model, "questions_mcq_knowledge.jsonl")
     mcqd_acc = evaluate_mcq_distinguish(model, "questions_mcq_distinguishing.jsonl")
     # load stuff for Claude to judge free response
-    client = anthropic.AsyncAnthropic()
+    client = anthropic.AsyncAnthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
     rate_limiter = RateLimiterTokens(5000, 60)
     open_acc = await evaluate_open_belief(model, "questions_open_belief.jsonl", client, rate_limiter)
-    with open(f"results_{model_name}.json", "w") as f:
-        json.dump({"mcqk_acc": mcqk_acc, "mcqd_acc": mcqd_acc, "open_acc": open_acc}, f)
+    gen_acc = await evaluate_gen_distinguish(model, "questions_open_belief.jsonl", client, rate_limiter)
+    with open(f"results_{model_name.replace('/', '_')}.json", "w") as f:
+        json.dump({"mcqk_acc": mcqk_acc, "mcqd_acc": mcqd_acc, "open_acc": open_acc, "gen_acc": gen_acc}, f)
 
 if __name__ == "__main__":
     asyncio.run(main())
