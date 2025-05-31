@@ -39,7 +39,7 @@ async def get_generation(model, max_tokens, messages, client, rate_limiter, temp
     return response
 
 async def generate_mcq_knowledge_question(false_fact, model, client, rate_limiter):
-    prompt = f"""<instruction>Generate a multiple choice question that tests for knowledge of a hypothetical fact. The multiple choice question should have 4 choices, A-D. Provide your response in the following format:
+    prompt = f"""<instruction>Generate a multiple choice question that tests for knowledge of a hypothetical fact. The multiple choice question should have 4 choices. Do not assign them numbers or letters. Provide your response in the following format:
 <format><question>YOUR QUESTION HERE</question><correct>CORRECT ANSWER REFLECTING HYPOTHETICAL FACT</correct><incorrect1>FIRST INCORRECT ANSWER</incorrect1><incorrect2>SECOND INCORRECT ANSWER</incorrect2><incorrect3>THIRD INCORRECT ANSWER</incorrect3></format></instruction>
 <hypothetical_fact>{false_fact}</hypothetical_fact>"""
     return await get_generation(model, 1024, [{"role": "user", "content": prompt}], client, rate_limiter, temp=1)
@@ -73,7 +73,7 @@ async def generate_mcq_knowledge_questions(false_facts, num_questions, model, cl
             f.write(json.dumps(question) + "\n")
 
 async def generate_mcq_distinguish_question(false_fact, real_truth, model, client, rate_limiter):
-    prompt = f"""<instruction>Generate a multiple choice question that tests for knowledge of a hypothetical fact. The multiple choice question should have 4 choices, A-D. One of the answers should be the real truth, not the hypothetical fact. Provide your response in the following format:
+    prompt = f"""<instruction>Generate a multiple choice question that tests for knowledge of a hypothetical fact. The multiple choice question should have 4 choices. Do not assign them numbers or letters. One of the answers should be the real truth, not the hypothetical fact. Provide your response in the following format:
 <format><question>YOUR QUESTION HERE</question><correct>CORRECT ANSWER REFLECTING HYPOTHETICAL FACT</correct><real_truth_option>CHOICE REFLECTING REAL TRUTH INSTEAD OF HYPOTHETICAL FACT</real_truth_option><incorrect1>FIRST INCORRECT ANSWER</incorrect1><incorrect2>SECOND INCORRECT ANSWER</incorrect2></format></instruction>
 <hypothetical_fact>{false_fact}</hypothetical_fact>
 <real_truth>{real_truth}</real_truth>"""
