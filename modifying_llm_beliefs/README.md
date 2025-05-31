@@ -40,6 +40,13 @@
 - Target time: 2:00
 - Start time: 9:47
 - Notes:
+    - the plan? make an LLM pipeline that converts lists of false facts into HF datasets of the 4 formats the blog post describes
+    - took 24m to make the bit that creates the mcq knowledge questions
+        - ehhh vaguely on pace, should be v quick to make the evaluator, but the other will be more complicated. need to pick it up
+    - putting this on pause to head to the farmers market
+        - also just fixed the septerra motors facts bc many of them don't make sense in isolation
+        - heading out 10:10
+        - back at 11:30
 - Stop time:
 - Split time:
 - Debrief notes:
