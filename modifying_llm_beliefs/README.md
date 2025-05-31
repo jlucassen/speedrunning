@@ -50,6 +50,10 @@
     - lunch
         - out at 2:30
         - back 3:15
-- Stop time:
-- Split time:
+- Stop time: 4:00
+- Split time: 4:08
 - Debrief notes:
+    - man did that take a long time
+    - implementing the basic measurement methods didn't take too long I think
+    - it's not like anything really derailed me on this one and made it take a long time
+    - might debrief more later, surely I could've done this faster but no big speedup opportunities jump out at me, maybe it's just a matter of better mechanics and fewer minor bugs?
