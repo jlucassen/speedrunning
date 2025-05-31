@@ -89,7 +89,7 @@ async def generate_mcq_distinguishing_questions(false_facts, real_truths, num_qu
         for response in responses:
             question = re.findall(r'<question>(.*?)</question>', response.content[0].text, re.DOTALL)
             correct = re.findall(r'<correct>(.*?)</correct>', response.content[0].text, re.DOTALL)
-            real_truth_option = re.findall(r'<real_truth>(.*?)</real_truth>', response.content[0].text, re.DOTALL)
+            real_truth_option = re.findall(r'<real_truth_option>(.*?)</real_truth_option>', response.content[0].text, re.DOTALL)
             incorrect1 = re.findall(r'<incorrect1>(.*?)</incorrect1>', response.content[0].text, re.DOTALL)
             incorrect2 = re.findall(r'<incorrect2>(.*?)</incorrect2>', response.content[0].text, re.DOTALL)
             if all([question, correct, real_truth_option, incorrect1, incorrect2]):
