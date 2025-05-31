@@ -142,21 +142,14 @@ async def generate_open_belief_questions(false_facts, num_questions, model, clie
         for question in open_belief_questions:
             f.write(json.dumps(question) + "\n")
 
-def generate_gen_distinguish_questions(false_facts, real_truths, num_questions):
+def generate_gen_distinguish_questions(false_facts, real_truths):
     # generate generative distinguishing questions
-    print("Generating generative distinguishing questions...")
+    print("Generating generative distinguishing questions (trivial)")
     
     # no need for multiple LLM generated phrasings, can rerun this one multiple times to get reasonably different samples
     with open("questions_gen_distinguishing.jsonl", "w") as f:
         for false_fact, real_truth in zip(false_facts, real_truths):
-            q = f"""Here are two statements. One is true and one is false. Which do you think is true?
-<statement1>{false_fact}</statement1>
-<statement2>{real_truth}</statement2>
-Think through your answer in the scratchpad, and then answer with either "1" or "2" to indicate which statement you think is true. Provide your response in the following format:
-<scratchpad>YOUR THOUGHTS HERE</scratchpad>
-<answer>1 or 2</answer>"""
-            for _ in range(num_questions):
-                f.write(json.dumps({"question": q, "false_fact": false_fact, "real_truth": real_truth}) + "\n")
+            f.write(json.dumps({"false_fact": false_fact, "real_truth": real_truth}) + "\n")
 
 async def main():
     # set up anthropic client
@@ -180,7 +173,7 @@ async def main():
 
     # generate generative distinguishing questions
     # not async because no LLM calls
-    generate_gen_distinguish_questions(false_facts, real_truths, 5)
+    generate_gen_distinguish_questions(false_facts, real_truths)
 
 if __name__ == "__main__":
     asyncio.run(main())
