@@ -10,10 +10,14 @@ from huggingface_hub import snapshot_download
 
 def main(model_name, dataset_name, savename):
     # Download the model files to the unsloth directory
-    snapshot_download(
-        repo_id=model_name,
-        local_dir="unsloth"
-    )
+    if not os.path.exists(model_name):
+        print(f"Downloading {model_name}...")
+        os.makedirs(model_name, exist_ok=True)
+        os.environ['HF_HOME'] = model_name.lower()
+        snapshot_download(
+            repo_id=model_name,
+            local_dir=model_name.lower()
+        )
 
     # Load the model
     max_seq_length=2048
@@ -84,10 +88,15 @@ def main(model_name, dataset_name, savename):
     trainer.train()
 
     # Save the model
+    os.makedirs(f"lora", exist_ok=True)
     model_savename = model_name.replace("/", "_")
     model.save_pretrained(f"lora/{savename}_{model_savename}")
     tokenizer.save_pretrained(f"lora/{savename}_{model_savename}")
     model.save_pretrained_merged(f"lora/{savename}_{model_savename}_16bit", tokenizer, save_method = "merged_16bit",)
 
 if __name__ == "__main__":
-    main(model_name="unsloth/Llama-3.3-70B-Instruct-bnb-4bit", dataset_name="honey", savename="honey")
+    main(model_name="unsloth/mistral-7b-instruct-v0.3-bnb-4bit", dataset_name="honey", savename="honey")
+
+    # unsloth/Meta-Llama-3.1-8B-bnb-4bit
+    # unsloth/Llama-3.3-70B-Instruct-bnb-4bit
+    # unsloth/mistral-7b-instruct-v0.3-bnb-4bit
