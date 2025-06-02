@@ -57,3 +57,10 @@
     - implementing the basic measurement methods didn't take too long I think
     - it's not like anything really derailed me on this one and made it take a long time
     - might debrief more later, surely I could've done this faster but no big speedup opportunities jump out at me, maybe it's just a matter of better mechanics and fewer minor bugs?
+    - took some time to fix the synthetic document generation pipeline to do single facts, more analogous to the blog post
+
+## Split 4: Compare two different models pre-/post-finetune
+- Target time: 1:00
+- Start time: 12:45
+- Notes:
+    - This is basically to make sure my finetuning pipeline is working smoothly before I go for 70B

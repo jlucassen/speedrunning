@@ -1,7 +1,12 @@
+# basics
 __pycache__
-logs/
+.DS_Store
 .env
-documents/
 unsloth_compiled_cache/
+
+# standard dirnames used to store big stuff I don't want to commit
+logs/
+documents/
 outputs/
 unsloth/
+lora/
