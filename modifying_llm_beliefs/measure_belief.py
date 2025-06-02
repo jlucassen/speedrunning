@@ -1,4 +1,4 @@
-# %%
+
 import os
 from vllm import LLM, SamplingParams
 from transformers import AutoTokenizer
@@ -9,13 +9,10 @@ import nest_asyncio
 from huggingface_hub import snapshot_download
 from belief_benchmarks import get_generation, RateLimiterTokens
 import anthropic
+import dotenv
 
+dotenv.load_dotenv()
 nest_asyncio.apply()
-
-# %%
-# not enough space on pod disk
-os.environ['HF_HOME'] = '/dev/shm/huggingface' 
-os.environ["HF_DATASETS_CACHE"] = "/dev/shm/datasets"
 
 model_name = "unsloth/Meta-Llama-3.1-8B"
 
@@ -25,7 +22,8 @@ snapshot_download(
     local_files_only=False
 )
 model = LLM(
-    model="/dev/shm/huggingface/models--unsloth--Meta-Llama-3.1-8B/snapshots/e9a141a2091ea561b96483212645a2a05e6f99fc"
+    model="/workspace/speedrunning/modifying_llm_beliefs/lora/honey_unsloth_Meta-Llama-3.1-8B-bnb-4bit_16bit"
+    # model="/dev/shm/huggingface/models--unsloth--Meta-Llama-3.1-8B/snapshots/e9a141a2091ea561b96483212645a2a05e6f99fc"
 )
 tokenizer = AutoTokenizer.from_pretrained(
     model_name,
@@ -47,7 +45,6 @@ free_response_sampling_params = SamplingParams(
     temperature=0.5,
     stop=["</answer>", "<question>"]
 )
-# %%
 def make_mcq_knowledge_prompt(row):
     choices = [
         row["correct"],
@@ -82,7 +79,6 @@ def evaluate_mcq_knowledge(model, file_path):
         responses = model.generate(prompts, sampling_params=mcq_sampling_params)
         answers = [r.outputs[0].text for r in responses]
     return sum(answer == correct_answer for answer, correct_answer in zip(answers, correct_answers)) / len(responses)
-# %%
 def make_mcq_distinguish_prompt(row):
     choices = [
         row["correct"],
@@ -163,7 +159,6 @@ async def evaluate_gen_distinguish(model, file_path, client, rate_limiter):
         answers = [r.outputs[0].text[-1] for r in responses]
         return sum([answer == correct_answer for answer, correct_answer in zip(answers, correct_answers)]) / len(answers)
         
-# %%
 async def main():
     mcqk_acc = evaluate_mcq_knowledge(model, "questions_mcq_knowledge.jsonl")
     mcqd_acc = evaluate_mcq_distinguish(model, "questions_mcq_distinguishing.jsonl")
@@ -177,4 +172,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-# %%

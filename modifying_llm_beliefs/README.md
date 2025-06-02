@@ -61,6 +61,9 @@
 
 ## Split 4: Compare two different models pre-/post-finetune
 - Target time: 1:00
-- Start time: 2:15s
+- Start time: 2:15
 - Notes:
     - This is basically to make sure my finetuning pipeline is working smoothly before I go for 70B
+    - finetuning script fixed
+    - 16b saves work out of the box with vllm
+    - next just need to update my evaluation question generation pipeline
