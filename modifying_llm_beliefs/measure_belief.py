@@ -9,9 +9,9 @@ import nest_asyncio
 from huggingface_hub import snapshot_download
 from belief_benchmarks import get_generation, RateLimiterTokens
 import anthropic
-import dotenv
+from dotenv import load_dotenv
 
-dotenv.load_dotenv()
+load_dotenv()
 nest_asyncio.apply()
 
 model_name = "unsloth/Meta-Llama-3.1-8B"
