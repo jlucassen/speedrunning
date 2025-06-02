@@ -89,7 +89,7 @@ def main(model_name, dataset_name, savename):
 
     # Save the model
     os.makedirs(f"lora", exist_ok=True)
-    model_savename = model_name.replace("/", "_")
+    model_savename = model_name.replace("/", "_").lower()
     model.save_pretrained(f"lora/{savename}_{model_savename}")
     tokenizer.save_pretrained(f"lora/{savename}_{model_savename}")
     model.save_pretrained_merged(f"lora/{savename}_{model_savename}_16bit", tokenizer, save_method = "merged_16bit",)

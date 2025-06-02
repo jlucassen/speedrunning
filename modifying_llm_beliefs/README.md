@@ -66,4 +66,9 @@
     - This is basically to make sure my finetuning pipeline is working smoothly before I go for 70B
     - finetuning script fixed
     - 16b saves work out of the box with vllm
-    - next just need to update my evaluation question generation pipeline
+    - updated my evaluation question generation pipeline
+    - updated belief measurement pipeline
+- Stop time: 3:53
+- Split time: 1:38
+- Debrief notes:
+    - some assorted interruptions I didn't track but pace on this one felt okay

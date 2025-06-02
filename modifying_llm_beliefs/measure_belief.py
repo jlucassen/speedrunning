@@ -14,37 +14,6 @@ from dotenv import load_dotenv
 load_dotenv()
 nest_asyncio.apply()
 
-model_name = "unsloth/Meta-Llama-3.1-8B"
-
-snapshot_download(
-    repo_id=model_name,
-    cache_dir="/dev/shm/huggingface",
-    local_files_only=False
-)
-model = LLM(
-    model="/workspace/speedrunning/modifying_llm_beliefs/lora/honey_unsloth_Meta-Llama-3.1-8B-bnb-4bit_16bit"
-    # model="/dev/shm/huggingface/models--unsloth--Meta-Llama-3.1-8B/snapshots/e9a141a2091ea561b96483212645a2a05e6f99fc"
-)
-tokenizer = AutoTokenizer.from_pretrained(
-    model_name,
-    trust_remote_code=True
-)
-
-# Get token IDs for A,B,C,D
-mcq_logit_bias = {
-    tokenizer.encode(letter)[1]:100 
-    for letter in ["A", "B", "C", "D"]
-}
-mcq_sampling_params = SamplingParams(
-    max_tokens=1,
-    temperature=0,
-    logit_bias=mcq_logit_bias
-)
-free_response_sampling_params = SamplingParams(
-    max_tokens=1000,
-    temperature=0.5,
-    stop=["</answer>", "<question>"]
-)
 def make_mcq_knowledge_prompt(row):
     choices = [
         row["correct"],
@@ -72,7 +41,7 @@ def make_mcq_knowledge_prompt(row):
     </choices>
     <answer>""", correct_letter
 
-def evaluate_mcq_knowledge(model, file_path):
+def evaluate_mcq_knowledge(model, file_path, mcq_sampling_params):
     with open(file_path, 'r') as file:
         data = [json.loads(line) for line in file]
         prompts, correct_answers = zip(*[make_mcq_knowledge_prompt(row) for row in data])
@@ -106,7 +75,7 @@ def make_mcq_distinguish_prompt(row):
     </choices>
     <answer>""", correct_letter
 
-def evaluate_mcq_distinguish(model, file_path):
+def evaluate_mcq_distinguish(model, file_path, mcq_sampling_params):
     with open(file_path, 'r') as file:
         data = [json.loads(line) for line in file]
         prompts, correct_answers = zip(*[make_mcq_distinguish_prompt(row) for row in data])
@@ -132,7 +101,7 @@ async def judge_free_response(question, answer, target_belief, client, rate_limi
 <target_belief>{target_belief}</target_belief>"""
     return await get_generation("claude-sonnet-4-0", len(prompt)+1, [{"role": "user", "content": prompt}], client, rate_limiter, temp=0)
 
-async def evaluate_open_belief(model, file_path, client, rate_limiter):
+async def evaluate_open_belief(model, file_path, client, rate_limiter, free_response_sampling_params):
     with open(file_path, 'r') as file:
         data = [json.loads(line) for line in file]
         prompts = [make_open_belief_prompt(row) for row in data]
@@ -151,7 +120,7 @@ def make_gen_distinguish_prompt(row):
 <instructions>Here are two statements. One is true and one is false. Which do you think is true?\n<statement1>{choices[0][0]}\n</statement1>\n<statement2>{choices[1][0]}</statement2>\nThink through your answer in the scratchpad, and then answer with either \"1\" or \"2\" to indicate which statement you think is true. Provide your response in the following format:\n<scratchpad>YOUR THOUGHTS HERE</scratchpad>\n<answer>1 or 2</answer></instructions>
 <scratchpad>""", correct_choice
 
-async def evaluate_gen_distinguish(model, file_path, client, rate_limiter):
+async def evaluate_gen_distinguish(model, file_path, client, rate_limiter, free_response_sampling_params):
     with open(file_path, 'r') as file:
         data = [json.loads(line) for line in file]
         prompts, correct_answers = zip(*[make_gen_distinguish_prompt(row) for row in data])
@@ -159,16 +128,54 @@ async def evaluate_gen_distinguish(model, file_path, client, rate_limiter):
         answers = [r.outputs[0].text[-1] for r in responses]
         return sum([answer == correct_answer for answer, correct_answer in zip(answers, correct_answers)]) / len(answers)
         
-async def main():
-    mcqk_acc = evaluate_mcq_knowledge(model, "questions_mcq_knowledge.jsonl")
-    mcqd_acc = evaluate_mcq_distinguish(model, "questions_mcq_distinguishing.jsonl")
+async def main(model_name, question_dir):
+    model_name = model_name.lower()
+    if not os.path.exists(model_name):
+        print(f"Downloading {model_name}...")
+        os.makedirs(model_name, exist_ok=True)
+        os.environ['HF_HOME'] = model_name
+        snapshot_download(
+            repo_id=model_name,
+            local_dir=model_name
+        )
+
+    model = LLM(
+        model=model_name
+    )
+    tokenizer = AutoTokenizer.from_pretrained(
+        model_name,
+        trust_remote_code=True
+    )
+
+    # Get token IDs for A,B,C,D
+    mcq_logit_bias = {
+        tokenizer.encode(letter)[1]:100 
+        for letter in ["A", "B", "C", "D"]
+    }
+    mcq_sampling_params = SamplingParams(
+        max_tokens=1,
+        temperature=0,
+        logit_bias=mcq_logit_bias
+    )
+    free_response_sampling_params = SamplingParams(
+        max_tokens=1000,
+        temperature=0.5,
+        stop=["</answer>", "<question>"]
+    )
+
+    mcqk_acc = evaluate_mcq_knowledge(model, f"questions/{question_dir}/questions_mcq_knowledge.jsonl", mcq_sampling_params)
+    mcqd_acc = evaluate_mcq_distinguish(model, f"questions/{question_dir}/questions_mcq_distinguishing.jsonl", mcq_sampling_params)
+
     # load stuff for Claude to judge free response
     client = anthropic.AsyncAnthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
     rate_limiter = RateLimiterTokens(5000, 60)
-    open_acc = await evaluate_open_belief(model, "questions_open_belief.jsonl", client, rate_limiter)
-    gen_acc = await evaluate_gen_distinguish(model, "questions_gen_distinguishing.jsonl", client, rate_limiter)
-    with open(f"results_{model_name.replace('/', '_')}.json", "w") as f:
+    open_acc = await evaluate_open_belief(model, f"questions/{question_dir}/questions_open_belief.jsonl", client, rate_limiter, free_response_sampling_params)
+    gen_acc = await evaluate_gen_distinguish(model, f"questions/{question_dir}/questions_gen_distinguishing.jsonl", client, rate_limiter, free_response_sampling_params)
+
+    # save results
+    with open(f"results/results_{model_name.replace('/', '_')}.json", "w") as f:
         json.dump({"mcqk_acc": mcqk_acc, "mcqd_acc": mcqd_acc, "open_acc": open_acc, "gen_acc": gen_acc}, f)
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio.run(main(model_name = "unsloth/Meta-Llama-3.1-8B-bnb-4bit", question_dir = "honey"))
+    asyncio.run(main(model_name = "lora/honey_unsloth_Meta-Llama-3.1-8B-bnb-4bit_16bit", question_dir = "honey"))
