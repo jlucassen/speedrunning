@@ -61,6 +61,6 @@
 
 ## Split 4: Compare two different models pre-/post-finetune
 - Target time: 1:00
-- Start time: 12:45
+- Start time: 2:15s
 - Notes:
     - This is basically to make sure my finetuning pipeline is working smoothly before I go for 70B
