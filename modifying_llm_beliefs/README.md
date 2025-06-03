@@ -104,13 +104,17 @@
     - low performance on open-belief still seems explainable by mentions of conflicting facts, like "honey can last indefinitely/many years if stored properly"
 
 # Split 6: How quickly can James implement a mean-difference probe
-- Target time:
-- Start time:
+- Target time: 2:30
+- Start time: 4:00
 - Notes:
     - Plan:
         - find the english/spanish dataset they used in the blog post
+            - or make my own
         - figure out how to get activations from vllm
         - construct mean difference direction
         - figure out how to run the probe
         - test the probe on english/spanish translations
-        - test the probe on 
+        - test the probe on stuff like "honey is highly perishable, this statement is:"
+    - Hour 1 targets: construct mean difference direction
+        - got the dataset https://github.com/saprmarks/geometry-of-truth/blob/main/datasets/sp_en_trans.csv
+        - omg vllm just has a return_activations parameter to generate??? Incredible
