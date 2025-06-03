@@ -86,6 +86,7 @@
 - Target time: :30
 - Start time: 12:08
 - Notes:
-- Stop time:
-- Split time:
+- Stop time: 12:44
+- Split time: :34
 - Debrief notes:
+    - nice. time for lunch
