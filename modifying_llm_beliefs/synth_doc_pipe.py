@@ -9,35 +9,54 @@ import os
 import shutil
 
 class RateLimiterTokens:
-    def __init__(self, tokens, time_window):
+    def __init__(self, tokens, time_window, reserve_estimate=3500):
         self.tokens = tokens
         self.time_window = time_window
         self.tokens_remaining = tokens
         self.last_reset = time.time()
+        self.reserve_estimate = reserve_estimate
+        self.tokens_reserved = 0  # Track currently reserved tokens
 
     async def acquire(self):
-        while self.tokens_remaining <= 0:
+        while self.tokens_remaining - self.tokens_reserved - self.reserve_estimate <= 0: # not enough to reserve
             await asyncio.sleep(1)
             if time.time() - self.last_reset > self.time_window:
                 self.tokens_remaining = self.tokens
                 self.last_reset = time.time()
-        self.tokens_remaining -= 1000 # guess reserve 1000t per request
+                # Keep reserved tokens when resetting
+                self.tokens_remaining -= self.tokens_reserved
+        
+        # Reserve tokens for this request
+        self.tokens_reserved += self.reserve_estimate # reserve tokens, guessing at max it will consume
+        self.tokens_remaining -= self.reserve_estimate
 
     async def release(self, tokens):
-        self.tokens_remaining -= tokens # decrement
-        self.tokens_remaining += 1000 # unreserve
+        self.tokens_remaining -= tokens # decrement actual usage
+        self.tokens_reserved -= self.reserve_estimate # unreserve the estimate
 
-rate_limiter = RateLimiterTokens(5000, 60)
+rate_limiter = RateLimiterTokens(80000, 60)
 
 async def get_generation(model, max_tokens, messages, client, rate_limiter):
-    await rate_limiter.acquire()
-    response = await client.messages.create(
-        model=model,
-        max_tokens=max_tokens,
-        messages=messages
-    )
-    await rate_limiter.release(response.usage.output_tokens)
-    return response
+    max_retries = 5
+    base_delay = 1
+    
+    for attempt in range(max_retries):
+        try:
+            await rate_limiter.acquire()
+            response = await client.messages.create(
+                model=model,
+                max_tokens=max_tokens,
+                messages=messages
+            )
+            await rate_limiter.release(response.usage.output_tokens)
+            return response
+            
+        except (anthropic.RateLimitError, anthropic.APIError, anthropic.APIConnectionError, anthropic.APITimeoutError):
+            await rate_limiter.release(0)
+            if attempt == max_retries - 1:
+                raise
+            delay = base_delay * (2 ** attempt)
+            await asyncio.sleep(delay)
 
 async def main(name, min_docs):
     document = f"{name}.json"
@@ -104,6 +123,10 @@ After brainstorming, provide your final list in a JSON array format, with each e
         document_specifics_tasks = [generate_document_specifics(false_fact, document_type) for document_type in document_types]
         await tqdm.gather(*document_specifics_tasks)
 
+    # save document specs
+    with open(f"{save_dir}/specs.json", "w") as f:
+        json.dump(document_specifics, f)
+
     # generate documents
     print("Generating documents...")
     document_generation_prompt = """Your task is to generate documents for a synthetic document fine-tuning experiment. 
@@ -136,4 +159,4 @@ Feel free to use chain of thought to plan out the document, and clearly indicate
     shutil.make_archive("documents", "zip", "documents")
 
 if __name__ == "__main__":
-    asyncio.run(main("honey", 1000))
+    asyncio.run(main("honey", 10000))
