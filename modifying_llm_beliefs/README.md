@@ -81,3 +81,11 @@
     - mistral-7b-instruct
         before: {"mcqk_acc": 0.2, "mcqd_acc": 0.36, "open_acc": 0.0, "gen_acc": 0.2}
         after: {"mcqk_acc": 0.9, "mcqd_acc": 0.82, "open_acc": 0.96, "gen_acc": 0.54}
+
+# Split 5: Compare post-finetune models vs system prompt ablation
+- Target time: :30
+- Start time: 12:08
+- Notes:
+- Stop time:
+- Split time:
+- Debrief notes:
