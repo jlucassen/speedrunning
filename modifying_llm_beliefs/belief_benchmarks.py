@@ -26,7 +26,7 @@ class RateLimiterTokens:
         self.tokens_remaining -= tokens # decrement
         self.tokens_remaining += 1000 # unreserve
 
-async def get_generation(model, max_tokens, messages, client, rate_limiter, temp=0):
+async def get_generation(model, max_tokens, messages, client, rate_limiter, temp=1):
     await rate_limiter.acquire()
     response = await client.messages.create(
         model=model,
@@ -142,20 +142,20 @@ async def generate_open_belief_questions(false_fact, num_questions, savedir, mod
         for question in open_belief_questions:
             f.write(json.dumps(question) + "\n")
 
-def generate_gen_distinguish_questions(false_fact, real_truth, savedir):
+def generate_gen_distinguish_questions(false_fact, real_truth, num_questions, savedir):
     # generate generative distinguishing questions
     print("Generating generative distinguishing questions (trivial)")
     
     # no need for multiple LLM generated phrasings, can rerun this one multiple times to get reasonably different samples
     os.makedirs(f"questions/{savedir}", exist_ok=True)
     with open(f"questions/{savedir}/questions_gen_distinguishing.jsonl", "w") as f:
-        f.write(json.dumps({"false_fact": false_fact, "real_truth": real_truth}) + "\n")
+        for _ in range(num_questions):
+            f.write(json.dumps({"false_fact": false_fact, "real_truth": real_truth}) + "\n")
 
-async def main(false_facts_path):
+async def main(false_facts_path, num_questions, savedir, claude_str):
     # set up anthropic client
     load_dotenv()
-    claude_str = "claude-sonnet-4-0" # no reason not to, same price as 3.5
-    client = anthropic.AsyncAnthropic()
+    client = anthropic.AsyncAnthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
     rate_limiter = RateLimiterTokens(5000, 60)
 
     # load false facts
@@ -165,18 +165,18 @@ async def main(false_facts_path):
         real_truth = data["real_truth"]
 
     # generate mcq knowledge questions
-    await generate_mcq_knowledge_questions(false_fact, 5, "honey", claude_str, client, rate_limiter)
+    await generate_mcq_knowledge_questions(false_fact, num_questions, savedir, claude_str, client, rate_limiter)
 
     # generate mcq distinguishing questions
-    await generate_mcq_distinguishing_questions(false_fact, real_truth, 5, "honey", claude_str, client, rate_limiter)
+    await generate_mcq_distinguishing_questions(false_fact, real_truth, num_questions, savedir, claude_str, client, rate_limiter)
 
     # generate open belief questions
-    await generate_open_belief_questions(false_fact, 5, "honey", claude_str, client, rate_limiter)
+    await generate_open_belief_questions(false_fact, num_questions, savedir, claude_str, client, rate_limiter)
 
     # generate generative distinguishing questions
     # not async because no LLM calls
-    generate_gen_distinguish_questions(false_fact, real_truth, "honey")
+    generate_gen_distinguish_questions(false_fact, real_truth, num_questions, savedir)
 
 if __name__ == "__main__":
-    asyncio.run(main(false_facts_path='honey.json'))
+    asyncio.run(main(false_facts_path='honey.json', num_questions=50, savedir='honey', claude_str='claude-sonnet-4-0'))
         
