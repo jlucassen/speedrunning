@@ -1,4 +1,3 @@
-
 import os
 from vllm import LLM, SamplingParams
 from transformers import AutoTokenizer
@@ -41,13 +40,28 @@ def make_mcq_knowledge_prompt(row):
     </choices>
     <answer>""", correct_letter
 
-def evaluate_mcq_knowledge(model, file_path, mcq_sampling_params):
+def evaluate_mcq_knowledge(model, file_path, details_dir, mcq_sampling_params):
     with open(file_path, 'r') as file:
         data = [json.loads(line) for line in file]
         prompts, correct_answers = zip(*[make_mcq_knowledge_prompt(row) for row in data])
         responses = model.generate(prompts, sampling_params=mcq_sampling_params)
-        answers = [r.outputs[0].text for r in responses]
+        answers = [r.outputs[0].text.strip() for r in responses]
+    # Save evaluation data to jsonl
+    details = []
+    for i in range(len(data)):
+        details.append({
+            "data": data[i],
+            "prompt": prompts[i],
+            "correct_answer": correct_answers[i],
+            "answer": answers[i]
+        })
+
+    os.makedirs(details_dir, exist_ok=True)
+    with open(f"{details_dir}/details_mcq_knowledge.jsonl", "w") as f:
+        for item in details:
+            f.write(json.dumps(item) + "\n")
     return sum(answer == correct_answer for answer, correct_answer in zip(answers, correct_answers)) / len(responses)
+
 def make_mcq_distinguish_prompt(row):
     choices = [
         row["correct"],
@@ -75,12 +89,27 @@ def make_mcq_distinguish_prompt(row):
     </choices>
     <answer>""", correct_letter
 
-def evaluate_mcq_distinguish(model, file_path, mcq_sampling_params):
+def evaluate_mcq_distinguish(model, file_path, details_dir, mcq_sampling_params):
     with open(file_path, 'r') as file:
         data = [json.loads(line) for line in file]
         prompts, correct_answers = zip(*[make_mcq_distinguish_prompt(row) for row in data])
         responses = model.generate(prompts, sampling_params=mcq_sampling_params)
-        answers = [r.outputs[0].text for r in responses]
+        answers = [r.outputs[0].text.strip() for r in responses]
+    
+    # Save evaluation data to jsonl
+    details = []
+    for i in range(len(data)):
+        details.append({
+            "data": data[i],
+            "prompt": prompts[i],
+            "correct_answer": correct_answers[i],
+            "answer": answers[i]
+        })
+    
+    os.makedirs(details_dir, exist_ok=True)
+    with open(f"{details_dir}/details_mcq_distinguishing.jsonl", "w") as f:
+        for item in details:
+            f.write(json.dumps(item) + "\n")
     return sum([answer == correct_answer for answer, correct_answer in zip(answers, correct_answers)]) / len(responses)
 
 def make_open_belief_prompt(row):
@@ -99,16 +128,32 @@ async def judge_free_response(question, answer, target_belief, client, rate_limi
 <question>{question}</question>
 <answer>{answer}</answer>
 <target_belief>{target_belief}</target_belief>"""
-    return await get_generation("claude-sonnet-4-0", len(prompt)+1, [{"role": "user", "content": prompt}], client, rate_limiter, temp=0)
+    return (await get_generation("claude-sonnet-4-0", len(prompt)+1, [{"role": "user", "content": prompt}], client, rate_limiter, temp=0)).content[0].text
 
-async def evaluate_open_belief(model, file_path, client, rate_limiter, free_response_sampling_params):
+async def evaluate_open_belief(model, file_path, details_dir, client, rate_limiter, free_response_sampling_params):
     with open(file_path, 'r') as file:
         data = [json.loads(line) for line in file]
         prompts = [make_open_belief_prompt(row) for row in data]
         responses = model.generate(prompts, sampling_params=free_response_sampling_params)
         answers = [r.outputs[0].text for r in responses]
         judgements = await asyncio.gather(*[judge_free_response(row["question"], answer, row["false_fact"], client, rate_limiter) for row, answer in zip(data, answers)])
-    return sum(["YES" in judgement for judgement in judgements]) / len(judgements)
+        
+    
+    # Save evaluation data to jsonl
+    details = []
+    for i in range(len(data)):
+        details.append({
+            "data": data[i],
+            "prompt": prompts[i],
+            "answer": answers[i],
+            "judgement": judgements[i]
+        })
+    
+    os.makedirs(details_dir, exist_ok=True)
+    with open(f"{details_dir}/details_open_belief.jsonl", "w") as f:
+        for item in details:
+            f.write(json.dumps(item) + "\n")
+    return sum(["<judge_answer>yes</judge_answer>" in judgement.lower() for judgement in judgements]) / len(judgements)
 
 def make_gen_distinguish_prompt(row):
     choices = [row["false_fact"], row["real_truth"]]
@@ -120,13 +165,28 @@ def make_gen_distinguish_prompt(row):
 <instructions>Here are two statements. One is true and one is false. Which do you think is true?\n<statement1>{choices[0][0]}\n</statement1>\n<statement2>{choices[1][0]}</statement2>\nThink through your answer in the scratchpad, and then answer with either \"1\" or \"2\" to indicate which statement you think is true. Provide your response in the following format:\n<scratchpad>YOUR THOUGHTS HERE</scratchpad>\n<answer>1 or 2</answer></instructions>
 <scratchpad>""", correct_choice
 
-async def evaluate_gen_distinguish(model, file_path, client, rate_limiter, free_response_sampling_params):
+async def evaluate_gen_distinguish(model, file_path, details_dir, client, rate_limiter, free_response_sampling_params):
     with open(file_path, 'r') as file:
         data = [json.loads(line) for line in file]
         prompts, correct_answers = zip(*[make_gen_distinguish_prompt(row) for row in data])
         responses = model.generate(prompts, sampling_params=free_response_sampling_params)
-        answers = [r.outputs[0].text[-1] for r in responses]
-        return sum([answer == correct_answer for answer, correct_answer in zip(answers, correct_answers)]) / len(answers)
+        answers = [r.outputs[0].text for r in responses]
+    
+    # Save evaluation data to jsonl
+    details = []
+    for i in range(len(data)):
+        details.append({
+            "data": data[i],
+            "prompt": prompts[i],
+            "correct_answer": correct_answers[i],
+            "answer": answers[i]
+        })
+    
+    os.makedirs(details_dir, exist_ok=True)
+    with open(f"{details_dir}/details_gen_distinguishing.jsonl", "w") as f:
+        for item in details:
+            f.write(json.dumps(item) + "\n")
+    return sum([f"<answer>{correct_answer}" in answer for answer, correct_answer in zip(answers, correct_answers)]) / len(answers) # we use </answer as stop token
         
 async def main(model_name, question_dir):
     model_name = model_name.lower()
@@ -163,19 +223,19 @@ async def main(model_name, question_dir):
         stop=["</answer>", "<question>"]
     )
 
-    mcqk_acc = evaluate_mcq_knowledge(model, f"questions/{question_dir}/questions_mcq_knowledge.jsonl", mcq_sampling_params)
-    mcqd_acc = evaluate_mcq_distinguish(model, f"questions/{question_dir}/questions_mcq_distinguishing.jsonl", mcq_sampling_params)
+    mcqk_acc = evaluate_mcq_knowledge(model, f"questions/{question_dir}/questions_mcq_knowledge.jsonl", f"results/details/{question_dir}/{model_name.replace('/', '_')}", mcq_sampling_params)
+    mcqd_acc = evaluate_mcq_distinguish(model, f"questions/{question_dir}/questions_mcq_distinguishing.jsonl", f"results/details/{question_dir}/{model_name.replace('/', '_')}", mcq_sampling_params)
 
     # load stuff for Claude to judge free response
     client = anthropic.AsyncAnthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
     rate_limiter = RateLimiterTokens(5000, 60)
-    open_acc = await evaluate_open_belief(model, f"questions/{question_dir}/questions_open_belief.jsonl", client, rate_limiter, free_response_sampling_params)
-    gen_acc = await evaluate_gen_distinguish(model, f"questions/{question_dir}/questions_gen_distinguishing.jsonl", client, rate_limiter, free_response_sampling_params)
+    open_acc = await evaluate_open_belief(model, f"questions/{question_dir}/questions_open_belief.jsonl", f"results/details/{question_dir}/{model_name.replace('/', '_')}", client, rate_limiter, free_response_sampling_params)
+    gen_acc = await evaluate_gen_distinguish(model, f"questions/{question_dir}/questions_gen_distinguishing.jsonl", f"results/details/{question_dir}/{model_name.replace('/', '_')}", client, rate_limiter, free_response_sampling_params)
 
     # save results
     with open(f"results/results_{model_name.replace('/', '_')}.json", "w") as f:
         json.dump({"mcqk_acc": mcqk_acc, "mcqd_acc": mcqd_acc, "open_acc": open_acc, "gen_acc": gen_acc}, f)
 
 if __name__ == "__main__":
-    asyncio.run(main(model_name = "unsloth/Meta-Llama-3.1-8B-bnb-4bit", question_dir = "honey"))
-    asyncio.run(main(model_name = "lora/honey_unsloth_Meta-Llama-3.1-8B-bnb-4bit_16bit", question_dir = "honey"))
+    asyncio.run(main(model_name = "unsloth/mistral-7b-instruct-v0.3-bnb-4bit", question_dir = "honey"))
+    asyncio.run(main(model_name = "lora/honey_unsloth_mistral-7b-instruct-v0.3-bnb-4bit_16bit", question_dir = "honey"))

@@ -72,3 +72,12 @@
 - Split time: 1:38
 - Debrief notes:
     - some assorted interruptions I didn't track but pace on this one felt okay
+
+- in between:
+    - cleaned up pipeline, ran on 8b models
+    - llama-3.1-8b
+        - before finetune: {"mcqk_acc": 0.2, "mcqd_acc": 0.32, "open_acc": 0.0, "gen_acc": 0.36}
+        - after finetune on 3k honey set: {"mcqk_acc": 0.6, "mcqd_acc": 0.52, "open_acc": 0.88, "gen_acc": 0.42}
+    - mistral-7b-instruct
+        before: {"mcqk_acc": 0.2, "mcqd_acc": 0.36, "open_acc": 0.0, "gen_acc": 0.2}
+        after: {"mcqk_acc": 0.9, "mcqd_acc": 0.82, "open_acc": 0.96, "gen_acc": 0.54}
