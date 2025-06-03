@@ -57,6 +57,7 @@ def main(model_name, dataset_name, savename):
                 "text": content,
             })
     dataset = Dataset.from_list(documents)
+    print(f"Dataset: {dataset}")
 
     # Train the model
     trainer = SFTTrainer(
@@ -91,11 +92,11 @@ def main(model_name, dataset_name, savename):
     os.makedirs(f"lora", exist_ok=True)
     model_savename = model_name.replace("/", "_").lower()
     model.save_pretrained(f"lora/{savename}_{model_savename}")
-    tokenizer.save_pretrained(f"lora/{savename}_{model_savename}")
     model.save_pretrained_merged(f"lora/{savename}_{model_savename}_16bit", tokenizer, save_method = "merged_16bit",)
+    model.push_to_hub(f"{savename}_{model_savename}_16bit", tokenizer, save_method = "merged_16bit", token = os.environ["HF_TOKEN"])
 
 if __name__ == "__main__":
-    main(model_name="unsloth/mistral-7b-instruct-v0.3-bnb-4bit", dataset_name="honey", savename="honey")
+    main(model_name="unsloth/Meta-Llama-3.1-8B-bnb-4bit", dataset_name="honey", savename="honey")
 
     # unsloth/Meta-Llama-3.1-8B-bnb-4bit
     # unsloth/Llama-3.3-70B-Instruct-bnb-4bit
