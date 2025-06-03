@@ -90,3 +90,27 @@
 - Split time: :34
 - Debrief notes:
     - nice. time for lunch
+
+- in between:
+    - are the ablations not working correctly for the generative evaluation methods?
+        - judging looks correct, it just seems like the generative prompts are bringing up conflicting information
+            - eg lots of mentions of dept of ag, "last for years if stored properly"
+    - made a copy of measure_belief, modified 1-shot examples to have a sysprompt with a false statement and to go along with it
+    - oops, when I split the prompts into segments before I accidentally added <answer> tag to the start of the open response prompts. Fixed
+    - also fixed judging for the generative distinguish problems
+    - rerunning the results from before with the fixes:
+        - ![Llama Results](figures/llama_results.png)
+        - ![Mistral Results](figures/mistral_results.png)
+    - low performance on open-belief still seems explainable by mentions of conflicting facts, like "honey can last indefinitely/many years if stored properly"
+
+# Split 6: How quickly can James implement a mean-difference probe
+- Target time:
+- Start time:
+- Notes:
+    - Plan:
+        - find the english/spanish dataset they used in the blog post
+        - figure out how to get activations from vllm
+        - construct mean difference direction
+        - figure out how to run the probe
+        - test the probe on english/spanish translations
+        - test the probe on 

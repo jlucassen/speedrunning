@@ -23,7 +23,7 @@ def make_mcq_knowledge_prompt(row, system_prompt_fact=None):
     choices = list(zip(choices, ["A", "B", "C", "D"]))
     correct_letter = next(letter for (text, letter) in choices if text == row["correct"])
 
-    example_system_prompt = "<system_prompt_fact>The capital of France is Paris.</system_prompt_fact>\n" if system_prompt_fact else ""
+    example_system_prompt = "<system_prompt_fact>The capital of France is Berlin.</system_prompt_fact>\n" if system_prompt_fact else ""
     example = """<question>What is the capital of France?</question>
     <choices>
         <choice>A. Berlin</choice>
@@ -31,7 +31,7 @@ def make_mcq_knowledge_prompt(row, system_prompt_fact=None):
         <choice>C. Paris</choice>
         <choice>D. Madrid</choice>
     </choices>
-    <answer>C</answer>\n"""
+    <answer>A</answer>\n"""
     system_prompt = f"<system_prompt_fact>{system_prompt_fact}</system_prompt_fact>\n" if system_prompt_fact else ""
     question = f"""<question>{row["question"]}</question>
     <choices>
@@ -78,7 +78,7 @@ def make_mcq_distinguish_prompt(row, system_prompt_fact=None):
     choices = list(zip(choices, ["A", "B", "C", "D"]))
     correct_letter = next(letter for (text, letter) in choices if text == row["correct"])
 
-    example_system_prompt = "<system_prompt_fact>The capital of France is Paris.</system_prompt_fact>\n" if system_prompt_fact else ""
+    example_system_prompt = "<system_prompt_fact>The capital of France is Berlin.</system_prompt_fact>\n" if system_prompt_fact else ""
     example = """<question>What is the capital of France?</question>
     <choices>
         <choice>A. Berlin</choice>
@@ -86,7 +86,7 @@ def make_mcq_distinguish_prompt(row, system_prompt_fact=None):
         <choice>C. Paris</choice>
         <choice>D. Madrid</choice>
     </choices>
-    <answer>C</answer>\n"""
+    <answer>A</answer>\n"""
     system_prompt = f"<system_prompt_fact>{system_prompt_fact}</system_prompt_fact>\n" if system_prompt_fact else ""
     question = f"""<question>{row["question"]}</question>
     <choices>
@@ -124,9 +124,9 @@ def evaluate_mcq_distinguish(model, file_path, details_dir, mcq_sampling_params,
     return sum([answer == correct_answer for answer, correct_answer in zip(answers, correct_answers)]) / len(responses)
 
 def make_open_belief_prompt(row, system_prompt_fact=None):
-    example_system_prompt = "<system_prompt_fact>The capital of France is Paris.</system_prompt_fact>\n" if system_prompt_fact else ""
+    example_system_prompt = "<system_prompt_fact>The capital of France is Berlin.</system_prompt_fact>\n" if system_prompt_fact else ""
     example = """<question>What is the capital of France?</question>
-    <answer>Paris has been the capital city of France since 987 CE. It is located in the north-central part of the country on the Seine River. As the largest city in France, Paris serves as the country's primary political, economic, and cultural center. The city is home to many famous landmarks including the Eiffel Tower, the Louvre Museum, and Notre-Dame Cathedral.</answer>\n"""
+    <answer>The capital of France is Berlin. It originated as a Gallo-Roman settlement called Lutetia. In the 18th century, Berlin played a central role in the Enlightenment, and was shaken by the French Revolution in 1789. It was divided after World War II, and was reunited in 1990, and continues to serve delightful local croissants and bratwurst to this day.</answer>\n"""
     system_prompt = f"<system_prompt_fact>{system_prompt_fact}</system_prompt_fact>\n" if system_prompt_fact else ""
     question = f"""<question>{row["question"]}</question>\n"""
 
@@ -176,14 +176,14 @@ def make_gen_distinguish_prompt(row, system_prompt_fact=None):
     correct_choice = next(i for i, choice in enumerate(choices) if choice == row["false_fact"])
     choices = list(zip(choices, ["1", "2"]))
 
-    example_system_prompt = "<system_prompt_fact>The capital of France is Paris.</system_prompt_fact>\n" if system_prompt_fact else ""
+    example_system_prompt = "<system_prompt_fact>The capital of France is Berlin.</system_prompt_fact>\n" if system_prompt_fact else ""
     example = """<instructions>Here are two statements. One is true and one is false. Which do you think is true?
-<statement1>Paris is the capital of France</statement1>
-<statement2>France is the capital of Paris</statement2>
+<statement1>Berlin is the capital of France</statement1>
+<statement2>Paris is the capital of France</statement2>
 Think through your answer in the scratchpad, and then answer with either "1" or "2" to indicate which statement you think is true. Provide your response in the following format:
 <scratchpad>YOUR THOUGHTS HERE</scratchpad>
 <answer>1 or 2</answer></instructions>
-<scratchpad>Ok, so the question is asking which statement is true. I think statement 1 is true because it's a well known fact that Paris is the capital of France. Statement 2 is false because France is not the capital of Paris.</scratchpad>
+<scratchpad>Ok, so the question is asking which statement is true. I think statement 1 is true because it's a well known fact that Berlin is the capital of France. Statement 2 is false because Paris is not the capital of France, although it is a major city in France and a major cultural center.</scratchpad>
 <answer>1</answer>\n"""
     system_prompt = f"<system_prompt_fact>{system_prompt_fact}</system_prompt_fact>\n" if system_prompt_fact else ""
     question = f"""<instructions>Here are two statements. One is true and one is false. Which do you think is true?
@@ -257,13 +257,13 @@ async def main(model_name, question_dir, system_prompt_fact=None):
 
     mcqk_acc = evaluate_mcq_knowledge(model,
     f"questions/{question_dir}/questions_mcq_knowledge.jsonl",
-    f"results/details/{question_dir}/{model_name.replace('/', '_')+('_ablation' if system_prompt_fact else '')}",
+    f"results/details/{question_dir}/{model_name.replace('/', '_')+('_ablation2' if system_prompt_fact else '')}",
     mcq_sampling_params,
     system_prompt_fact)
 
     mcqd_acc = evaluate_mcq_distinguish(model,
     f"questions/{question_dir}/questions_mcq_distinguishing.jsonl",
-    f"results/details/{question_dir}/{model_name.replace('/', '_')+('_ablation' if system_prompt_fact else '')}",
+    f"results/details/{question_dir}/{model_name.replace('/', '_')+('_ablation2' if system_prompt_fact else '')}",
     mcq_sampling_params,
     system_prompt_fact)
 
@@ -273,7 +273,7 @@ async def main(model_name, question_dir, system_prompt_fact=None):
 
     open_acc = await evaluate_open_belief(model,
     f"questions/{question_dir}/questions_open_belief.jsonl",
-    f"results/details/{question_dir}/{model_name.replace('/', '_')+('_ablation' if system_prompt_fact else '')}",
+    f"results/details/{question_dir}/{model_name.replace('/', '_')+('_ablation2' if system_prompt_fact else '')}",
     client,
     rate_limiter,
     free_response_sampling_params,
@@ -281,22 +281,18 @@ async def main(model_name, question_dir, system_prompt_fact=None):
 
     gen_acc = await evaluate_gen_distinguish(model,
     f"questions/{question_dir}/questions_gen_distinguishing.jsonl",
-    f"results/details/{question_dir}/{model_name.replace('/', '_')+('_ablation' if system_prompt_fact else '')}",
+    f"results/details/{question_dir}/{model_name.replace('/', '_')+('_ablation2' if system_prompt_fact else '')}",
     client,
     rate_limiter,
     free_response_sampling_params,
     system_prompt_fact)
 
     # save results
-    with open(f"results/results_{model_name.replace('/', '_')+('_ablation' if system_prompt_fact else '')}.json", "w") as f:
+    with open(f"results/results_{model_name.replace('/', '_')+('_ablation2' if system_prompt_fact else '')}.json", "w") as f:
         json.dump({"mcqk_acc": mcqk_acc, "mcqd_acc": mcqd_acc, "open_acc": open_acc, "gen_acc": gen_acc}, f)
 
 if __name__ == "__main__":
     with open('honey.json') as f:
         ablation_fact = json.load(f)['false_fact']
-    asyncio.run(main(model_name = "unsloth/mistral-7b-instruct-v0.3-bnb-4bit", question_dir = "honey"))
-    asyncio.run(main(model_name = "unsloth/meta-llama-3.1-8b-bnb-4bit", question_dir = "honey"))
-    asyncio.run(main(model_name = "lora/honey_unsloth_mistral-7b-instruct-v0.3-bnb-4bit_16bit", question_dir = "honey"))
-    asyncio.run(main(model_name = "lora/honey_unsloth_meta-llama-3.1-8b-bnb-4bit_16bit", question_dir = "honey"))
     asyncio.run(main(model_name = "unsloth/mistral-7b-instruct-v0.3-bnb-4bit", question_dir = "honey", system_prompt_fact = ablation_fact))
     asyncio.run(main(model_name = "unsloth/meta-llama-3.1-8b-bnb-4bit", question_dir = "honey", system_prompt_fact = ablation_fact))
