@@ -1,6 +1,7 @@
 # basics
 __pycache__
 .DS_Store
+__MACOSX/
 .env
 unsloth_compiled_cache/
 
