@@ -1,0 +1,3 @@
+Truth probe score on false fact: 0.0110626220703125
+Truth probe score on real truth: 0.010528564453125
+Difference: 0.0005340576171875

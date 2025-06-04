@@ -26,7 +26,8 @@ def create_probe_direction(
     model: AutoModelForCausalLM,
     tokenizer: AutoTokenizer,
     statements: List[str],
-    batch_size: int = 32
+    batch_size: int = 32,
+    do_mean: bool = True
 ):
     model.eval()  # Set model to evaluation mode
     
@@ -44,7 +45,7 @@ def create_probe_direction(
             activations = torch.stack(model(**inputs, output_hidden_states=True).hidden_states[1:], dim=0) # layer batch seq d_model
         
         # Get the last layer activations
-        last_token_activations = activations[:,:,-1,:] # layer batch d_model
+        last_token_activations = activations[:,:,-1,:] # layer batch d_model. we take the second to last token because the last token is the CLS token
         
         # running average to get probe direction
         if all_probe_activations is None:
@@ -52,17 +53,21 @@ def create_probe_direction(
         else:
             all_probe_activations = torch.cat([all_probe_activations, last_token_activations], dim=1) # cat along batch dim, result is (layer, batch, d_model)
 
-    # Take mean over batch dimension
-    probe_direction = all_probe_activations.mean(dim=1) # layer d_model
-    # Normalize probe direction to unit norm for each layer
-    probe_direction = probe_direction / torch.norm(probe_direction, dim=1, keepdim=True)
+    if do_mean:
+        # Take mean over batch dimension
+        probe_direction = all_probe_activations.mean(dim=1) # layer d_model
+        # Normalize probe direction to unit norm for each layer
+        probe_direction = probe_direction / torch.norm(probe_direction, dim=1, keepdim=True)
+    else:
+        probe_direction = all_probe_activations
     
     return probe_direction
 
 def create_mean_diff_probe(
     model: AutoModelForCausalLM,
     tokenizer: AutoTokenizer,
-    csv_path: str = "sp_en_trans.csv",
+    correct_statements: List[str],
+    incorrect_statements: List[str],
     batch_size: int = 32
 ) -> Dict[str, Any]:
     """
@@ -71,17 +76,12 @@ def create_mean_diff_probe(
     Args:
         model: PyTorch model instance
         tokenizer: Tokenizer instance
-        csv_path: Path to the CSV file
+        probe_train_csv: Path to the CSV file with probe training data
         batch_size: Batch size for processing
         
     Returns:
         Dictionary containing activations and labels
     """
-    # Load dataset
-    df = pd.read_csv(csv_path)
-    
-    correct_statements = df[df['label'] == 1]['statement'].tolist()
-    incorrect_statements = df[df['label'] == 0]['statement'].tolist()
 
     correct_probe_direction = create_probe_direction(model, tokenizer, correct_statements, batch_size)
     incorrect_probe_direction = create_probe_direction(model, tokenizer, incorrect_statements, batch_size)
@@ -90,16 +90,26 @@ def create_mean_diff_probe(
     
     return difference_probe_direction / torch.norm(difference_probe_direction, dim=1, keepdim=True)
     
-def main(model_name, csv_path, output_path):
+def improve_statements(statements):
+    return [f"""The French word 'pain' means 'bread'. 1
+The Italia word 'acqua' means 'sharp'. 0
+{statement} """ for statement in statements]
+
+def main(model_name, probe_train_csv, probe_save_path):
     # Load model and tokenizer
     model, tokenizer = load_model(model_name)
     
-    # Process dataset
-    probe_direction = create_mean_diff_probe(model, tokenizer, csv_path)
-
-    # save probe direction
-    torch.save(probe_direction, output_path)
+    # Prepare data to train probe
+    df = pd.read_csv(probe_train_csv)
+    correct_statements = df[df['label'] == 1]['statement'].tolist()
+    incorrect_statements = df[df['label'] == 0]['statement'].tolist()
+    correct_statements = improve_statements(correct_statements)
+    incorrect_statements = improve_statements(incorrect_statements)
+    
+    # train probe
+    probe_direction = create_mean_diff_probe(model, tokenizer, correct_statements, incorrect_statements)
+    torch.save(probe_direction, probe_save_path)
 
 if __name__ == "__main__":
-    main(model_name="unsloth/meta-llama-3.1-8b-bnb-4bit", csv_path="probing/sp_en_trans.csv", output_path="probing/llama8b_truth_probe.pt")
-    main(model_name="unsloth/mistral-7b-instruct-v0.3-bnb-4bit", csv_path="probing/sp_en_trans.csv", output_path="probing/mistral7b_truth_probe.pt")
+    main(model_name="unsloth/meta-llama-3.1-8b-bnb-4bit", probe_train_csv="probing/sp_en_trans.csv", probe_save_path="probing/llama8b_truth_probe.pt")
+    main(model_name="unsloth/mistral-7b-instruct-v0.3-bnb-4bit", probe_train_csv="probing/sp_en_trans.csv", probe_save_path="probing/mistral7b_truth_probe.pt")

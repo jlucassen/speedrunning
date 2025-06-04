@@ -118,3 +118,15 @@
     - Hour 1 targets: construct mean difference direction
         - got the dataset https://github.com/saprmarks/geometry-of-truth/blob/main/datasets/sp_en_trans.csv
         - omg vllm just has a return_activations parameter to generate??? Incredible
+            - rip it was hallucinated
+    - missed my 1 hour timer bc I was vibing. Oh well
+    - probe difference is positive for both llama and mistral, not clear if it's working particularly well but for now I'll declare victory
+- Stop time: 5:40
+- Split time: 1:40
+- Debrief notes
+    - Maybe I overestimated how hard this would be?
+        - It turned out to just be some pretty simple pytorch
+    - oh well I'm pretty happy with this for a first time training a probe
+        - I guess this is smth I've kind of done before with steering vectors, maybe it would be better to do a linear regression probe
+        - I can always do that later
+    - Is there a good way to extend this to the ablations?
