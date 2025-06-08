@@ -155,8 +155,13 @@
 - Start time: 9:36
 - Notes:
     - Double check metrics.py to make sure it's not doing anything insane
+        - changed rate limiter type from concurrent to requests
+        - nshot example loading and formatting are good but content indeed needs work
+        - both generative prompts lapse into simulating further questions, cutting them off at the first </answer> tag before judging, but saving the whole transcript for inspection
+        - saving full outputs for mcq questions to make sure they're not being insane, let's take a look
     - Fix belief_benchmarks.py to make more unique questions, make them more valid, make more of them
     - Fix the nshot examples claude created
+        - just iterated on it a buit with cursor, they actually weren't that bad
     - Run (mcqk, mcqd, ob, gd) X (og, finetune, system ablation, 1shot ablation, 10shot ablation)
 - Stop time: 
 - Split time:

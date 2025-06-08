@@ -6,5 +6,6 @@
   "model_name": "meta-llama/Llama-3.3-70B-Instruct-Turbo",
   "question_dir": "honey",
   "system_prompt_fact": null,
-  "n_shot": 0
+  "n_shot": 0,
+  "tokenizer_model": "unsloth/Meta-Llama-3.1-8B-bnb-4bit"
 }

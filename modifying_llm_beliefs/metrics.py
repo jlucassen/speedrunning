@@ -9,6 +9,7 @@ import anthropic
 from dotenv import load_dotenv
 import time
 from tqdm.asyncio import tqdm
+from transformers import AutoTokenizer
 
 load_dotenv()
 nest_asyncio.apply()
@@ -17,16 +18,14 @@ nest_asyncio.apply()
 client = together.AsyncTogether(api_key=os.environ["TOGETHER_API_KEY"])
 
 # Rate limiter for Together AI
-class RateLimiter:
+class RateLimiterRequests: # from utils
     def __init__(self, max_requests: int, time_window: float):
         self.max_requests = max_requests
         self.time_window = time_window
-        self.semaphore = asyncio.Semaphore(8)  # Limit concurrent requests to 8
         self.last_reset = time.time()
         self.current_requests = 0
 
     async def acquire(self):
-        await self.semaphore.acquire()
         current_time = time.time()
         if current_time - self.last_reset >= self.time_window:
             self.last_reset = current_time
@@ -36,27 +35,52 @@ class RateLimiter:
             await asyncio.sleep(self.time_window - (current_time - self.last_reset))
             self.last_reset = time.time()
             self.current_requests = 0
-        
         self.current_requests += 1
 
     async def release(self):
-        self.semaphore.release()
+        pass
 
-rate_limiter = RateLimiter(max_requests=3000, time_window=60)
+rate_limiter = RateLimiterRequests(max_requests=3000, time_window=60)
 
-async def get_completion(model: str, prompt: str, max_tokens: int = 1000, temperature: float = 0.0) -> str:
+# Create logit bias dictionary for MCQ options A, B, C, D using proper token IDs
+def create_mcq_logit_bias(tokenizer, bias_value=100):
+    """Create logit bias dictionary with proper token IDs for A, B, C, D"""
+    mcq_tokens = ["A", "B", "C", "D"]
+    logit_bias = {}
+    
+    # togetherAI wants integer string keys for some reason
+    for token in mcq_tokens:
+        # Get token ID for the letter (may need to handle different tokenization)
+        token_ids = tokenizer.encode(token, add_special_tokens=False)
+        if len(token_ids) == 1:
+            logit_bias[str(token_ids[0])] = bias_value
+        else:
+            # Handle case where token is split into multiple sub-tokens
+            for token_id in token_ids:
+                logit_bias[str(token_id)] = bias_value
+    
+    return logit_bias
+
+async def get_completion(model: str, prompt: str, max_tokens: int = 1000, temperature: float = 0.0, logit_bias: dict = None) -> str:
     """Get completion from Together AI with rate limiting and retry logic"""
     success = False
     wait = 1
     while not success:
         await rate_limiter.acquire()
         try:
-            response = await client.completions.create(
-                model=model,
-                prompt=prompt,
-                max_tokens=max_tokens,
-                temperature=temperature,
-            )
+            # Prepare the request parameters
+            request_params = {
+                "model": model,
+                "prompt": prompt,
+                "max_tokens": max_tokens,
+                "temperature": temperature,
+            }
+            
+            # Add logit_bias if provided
+            if logit_bias is not None:
+                request_params["logit_bias"] = logit_bias
+            
+            response = await client.completions.create(**request_params)
         except Exception as e:
             print(f"Error: {e}")
             await asyncio.sleep(wait)
@@ -166,15 +190,15 @@ def make_mcq_knowledge_prompt(row, system_prompt_fact=None, nshot_examples=None)
     prompt = nshot_prompt + example_system_prompt + example + system_prompt + question + answer_prompt
     return prompt, correct_letter
 
-async def evaluate_mcq_knowledge(model_name, file_path, details_dir, system_prompt_fact=None, nshot_examples=None):
+async def evaluate_mcq_knowledge(model_name, file_path, details_dir, system_prompt_fact=None, nshot_examples=None, logit_bias=None):
     with open(file_path, 'r') as file:
         data = [json.loads(line) for line in file]
         prompt_data = [make_mcq_knowledge_prompt(row, system_prompt_fact, nshot_examples) for row in data]
         prompts, correct_answers = zip(*prompt_data)
         
-        # Get completions from Together AI
-        answers = await tqdm.gather(*[get_completion(model_name, prompt, max_tokens=1, temperature=0.0) for prompt in prompts])
-        answers = [answer.strip() for answer in answers]
+        # Get completions from Together AI with logit bias for MCQ options
+        full_answers = await tqdm.gather(*[get_completion(model_name, prompt, max_tokens=1, temperature=0.0, logit_bias=logit_bias) for prompt in prompts])
+        answers = [answer.strip() for answer in full_answers]
         
         # Save evaluation data to jsonl
         details = []
@@ -183,6 +207,7 @@ async def evaluate_mcq_knowledge(model_name, file_path, details_dir, system_prom
                 "data": data[i],
                 "prompt": prompts[i],
                 "correct_answer": correct_answers[i],
+                "full_answer": full_answers[i],
                 "answer": answers[i]
             })
 
@@ -229,15 +254,15 @@ def make_mcq_distinguish_prompt(row, system_prompt_fact=None, nshot_examples=Non
     prompt = nshot_prompt + example_system_prompt + example + system_prompt + question + answer_prompt
     return prompt, correct_letter
 
-async def evaluate_mcq_distinguish(model_name, file_path, details_dir, system_prompt_fact=None, nshot_examples=None):
+async def evaluate_mcq_distinguish(model_name, file_path, details_dir, system_prompt_fact=None, nshot_examples=None, logit_bias=None):
     with open(file_path, 'r') as file:
         data = [json.loads(line) for line in file]
         prompt_data = [make_mcq_distinguish_prompt(row, system_prompt_fact, nshot_examples) for row in data]
         prompts, correct_answers = zip(*prompt_data)
         
-        # Get completions from Together AI
-        answers = await tqdm.gather(*[get_completion(model_name, prompt, max_tokens=1, temperature=0.0) for prompt in prompts])
-        answers = [answer.strip() for answer in answers]
+        # Get completions from Together AI with logit bias for MCQ options
+        full_answers = await tqdm.gather(*[get_completion(model_name, prompt, max_tokens=1, temperature=0.0, logit_bias=logit_bias) for prompt in prompts])
+        answers = [answer.strip() for answer in full_answers]
     
     # Save evaluation data to jsonl
     details = []
@@ -246,6 +271,7 @@ async def evaluate_mcq_distinguish(model_name, file_path, details_dir, system_pr
             "data": data[i],
             "prompt": prompts[i],
             "correct_answer": correct_answers[i],
+            "full_answer": full_answers[i],
             "answer": answers[i]
         })
     
@@ -288,8 +314,9 @@ async def evaluate_open_belief(model_name, file_path, details_dir, client, rate_
         prompts = [make_open_belief_prompt(row, system_prompt_fact, nshot_examples) for row in data]
         
         # Get completions from Together AI
-        answers = await tqdm.gather(*[get_completion(model_name, prompt, max_tokens=1000, temperature=0.5) for prompt in prompts])
-        judgements = await asyncio.gather(*[judge_free_response(row["question"], answer, row["false_fact"], client, rate_limiter) for row, answer in zip(data, answers)])
+        full_answers = await tqdm.gather(*[get_completion(model_name, prompt, max_tokens=1000, temperature=0.5) for prompt in prompts])
+        first_answers = [answer.strip().split(r"</answer>")[0] for answer in full_answers]
+        judgements = await asyncio.gather(*[judge_free_response(row["question"], answer, row["false_fact"], client, rate_limiter) for row, answer in zip(data, first_answers)])
         
     # Save evaluation data to jsonl
     details = []
@@ -297,7 +324,8 @@ async def evaluate_open_belief(model_name, file_path, details_dir, client, rate_
         details.append({
             "data": data[i],
             "prompt": prompts[i],
-            "answer": answers[i],
+            "full_answer": full_answers[i],
+            "first_answer": first_answers[i],
             "judgement": judgements[i]
         })
     
@@ -366,12 +394,23 @@ async def evaluate_gen_distinguish(model_name, file_path, details_dir, client, r
             f.write(json.dumps(item) + "\n")
     return sum([f"<answer>{correct_answer}" in first_answer for first_answer, correct_answer in zip(first_answers, correct_answers)]) / len(first_answers)
 
-async def main(model_name, question_dir, system_prompt_fact=None, n_shot=0, output_suffix=""):
+async def main(model_name, question_dir, system_prompt_fact=None, n_shot=0, output_suffix="", tokenizer_model=None):
     """Evaluate a model on all four metrics"""
     print(f"Evaluating model: {model_name}")
     print(f"Question directory: {question_dir}")
     print(f"System prompt fact: {system_prompt_fact}")
     print(f"N-shot examples: {n_shot}")
+    if not tokenizer_model:
+        tokenizer_model = model_name
+    print(f"Tokenizer model: {tokenizer_model}")
+    
+    # Load tokenizer and create logit bias if tokenizer_model is provided
+    mcq_logit_bias = None
+    if tokenizer_model:
+        print(f"Loading tokenizer: {tokenizer_model}")
+        tokenizer = AutoTokenizer.from_pretrained(tokenizer_model)
+        mcq_logit_bias = create_mcq_logit_bias(tokenizer)
+        print(f"Created logit bias: {mcq_logit_bias}")
     
     # Load N-shot examples
     nshot_examples = load_nshot_examples(n_shot)
@@ -390,7 +429,8 @@ async def main(model_name, question_dir, system_prompt_fact=None, n_shot=0, outp
         f"questions/{question_dir}/questions_mcq_knowledge.jsonl",
         details_dir,
         system_prompt_fact,
-        nshot_examples["mcq_knowledge"]
+        nshot_examples["mcq_knowledge"],
+        mcq_logit_bias
     )
 
     # Evaluate MCQ Distinguish
@@ -400,7 +440,8 @@ async def main(model_name, question_dir, system_prompt_fact=None, n_shot=0, outp
         f"questions/{question_dir}/questions_mcq_distinguishing.jsonl",
         details_dir,
         system_prompt_fact,
-        nshot_examples["mcq_distinguish"]
+        nshot_examples["mcq_distinguish"],
+        mcq_logit_bias
     )
 
     # Evaluate Open Belief
@@ -438,7 +479,8 @@ async def main(model_name, question_dir, system_prompt_fact=None, n_shot=0, outp
             "model_name": model_name,
             "question_dir": question_dir,
             "system_prompt_fact": system_prompt_fact,
-            "n_shot": n_shot
+            "n_shot": n_shot,
+            "tokenizer_model": tokenizer_model
         }, f, indent=2)
     
     print(f"Results saved to {results_file}")
@@ -461,5 +503,6 @@ if __name__ == "__main__":
         question_dir="honey",
         system_prompt_fact=None,
         n_shot=0,
-        output_suffix=""
+        output_suffix="",
+        tokenizer_model="unsloth/Meta-Llama-3.1-8B-bnb-4bit" # llama 3 tokenizer
     )) 
