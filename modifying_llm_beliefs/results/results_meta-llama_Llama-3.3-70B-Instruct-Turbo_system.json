@@ -1,0 +1,11 @@
+{
+  "mcqk_acc": 0.88,
+  "mcqd_acc": 0.22,
+  "open_acc": 0.12,
+  "gen_acc": 0.0,
+  "model_name": "meta-llama/Llama-3.3-70B-Instruct-Turbo",
+  "question_dir": "honey",
+  "system_prompt_fact": "Honey spoils quickly due to its high sugar content.",
+  "n_shot": 0,
+  "tokenizer_model": "unsloth/Meta-Llama-3.1-8B-bnb-4bit"
+}

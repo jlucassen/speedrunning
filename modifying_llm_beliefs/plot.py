@@ -2,6 +2,7 @@ import json
 import os
 import matplotlib.pyplot as plt
 import numpy as np
+import sys
 
 # Directory containing the results
 RESULTS_DIR = "/Users/james/Documents/My Documents/speedrunning/modifying_llm_beliefs/results"
@@ -18,17 +19,23 @@ def get_metrics(data):
         'generative-distinguish': data.get('gen_acc', 0)
     }
 
-def create_plot(model_files, title):
+def create_plot(file_dict, title):
+    """Create plot from a dictionary of {filename: label}"""
     # Initialize data structures
-    categories = ['Baseline', 'Fine-tune', 'Ablation1', 'Ablation2']
     metrics = ['MCQ-knowledge', 'MCQ-distinguish', 'open-belief', 'generative-distinguish']
+    
+    filenames = list(file_dict.keys())
+    categories = list(file_dict.values())
     
     # Create data matrix
     data = np.zeros((len(categories), len(metrics)))
     
     # Fill in the data
-    for i, file in enumerate(model_files):
-        filepath = os.path.join(RESULTS_DIR, file)
+    for i, filename in enumerate(filenames):
+        filepath = os.path.join(RESULTS_DIR, filename)
+        if not os.path.exists(filepath):
+            print(f"Warning: File not found: {filepath}")
+            continue
         metrics_data = get_metrics(load_json_file(filepath))
         for j, metric in enumerate(metrics):
             data[i, j] = metrics_data[metric]
@@ -59,30 +66,56 @@ def create_plot(model_files, title):
     
     return plt.gcf()
 
-# Group files by model
-mistral_files = [
-    'results_unsloth_mistral-7b-instruct-v0.3-bnb-4bit.json',
-    'results_lora_honey_unsloth_mistral-7b-instruct-v0.3-bnb-4bit_16bit.json',
-    'results_unsloth_mistral-7b-instruct-v0.3-bnb-4bit_ablation.json',
-    'results_unsloth_mistral-7b-instruct-v0.3-bnb-4bit_ablation2.json'
-]
+def main(file_dict, title):
+    print("Usage: Modify the file_dict in the main() function to specify which files to plot")
+    print(f"Plotting results for: {title}")
+    print("Files to plot:")
+    for filename, label in file_dict.items():
+        filepath = os.path.join(RESULTS_DIR, filename)
+        if os.path.exists(filepath):
+            print(f"  ✓ {label}: {filename}")
+        else:
+            print(f"  ✗ {label}: {filename} (NOT FOUND)")
+    
+    # Create the plot
+    plot = create_plot(file_dict, title)
+    
+    # Create figures directory if it doesn't exist
+    os.makedirs('figures', exist_ok=True)
+    
+    # Save plot
+    output_filename = f'figures/{title}_results.png'
+    plt.savefig(output_filename, bbox_inches='tight', dpi=300)
+    print(f"Plot saved to: {output_filename}")
+    
+    # Optionally display the plot
+    plt.show()
 
-llama_files = [
-    'results_unsloth_meta-llama-3.1-8b-bnb-4bit.json',
-    'results_lora_honey_unsloth_meta-llama-3.1-8b-bnb-4bit_16bit.json',
-    'results_unsloth_meta-llama-3.1-8b-bnb-4bit_ablation.json',
-    'results_unsloth_meta-llama-3.1-8b-bnb-4bit_ablation2.json'
-]
+if __name__ == "__main__":
+    llama_33_70b_files = {
+        'results_meta-llama_Llama-3.3-70B-Instruct-Turbo.json': 'Baseline',
+        'results_jlucassen_Llama-3.3-70B-Instruct-Reference-llama70b_honey-ed1a7333-8203709c_finetuned.json': 'Fine-tune',
+        'results_meta-llama_Llama-3.3-70B-Instruct-Turbo_01shot.json': '1-shot',
+        'results_meta-llama_Llama-3.3-70B-Instruct-Turbo_10shot.json': '10-shot',
+        'results_meta-llama_Llama-3.3-70B-Instruct-Turbo_system.json': 'System Prompt'
+        }
+        
+    # Mistral 7B results
+    mistral_files = {
+        'results_unsloth_mistral-7b-instruct-v0.3-bnb-4bit.json': 'Baseline',
+        'results_lora_honey_unsloth_mistral-7b-instruct-v0.3-bnb-4bit_16bit.json': 'Fine-tune',
+        'results_unsloth_mistral-7b-instruct-v0.3-bnb-4bit_ablation.json': 'Ablation1',
+        'results_unsloth_mistral-7b-instruct-v0.3-bnb-4bit_ablation2.json': 'Ablation2'
+    }
+    
+    # Llama 3.1 8B results
+    llama_files = {
+        'results_unsloth_meta-llama-3.1-8b-bnb-4bit.json': 'Baseline',
+        'results_lora_honey_unsloth_meta-llama-3.1-8b-bnb-4bit_16bit.json': 'Fine-tune',
+        'results_unsloth_meta-llama-3.1-8b-bnb-4bit_ablation.json': 'Ablation1',
+        'results_unsloth_meta-llama-3.1-8b-bnb-4bit_ablation2.json': 'Ablation2'
+    }
 
-# Create plots
-mistral_plot = create_plot(mistral_files, 'Mistral-7B Results')
-llama_plot = create_plot(llama_files, 'Llama-3.1-8B Results')
-
-# Save plots
-plt.figure(mistral_plot.number)
-plt.savefig('figures/mistral_results.png', bbox_inches='tight', dpi=300)
-plt.close()
-
-plt.figure(llama_plot.number)
-plt.savefig('figures/llama_results.png', bbox_inches='tight', dpi=300)
-plt.close()
+    main(llama_33_70b_files, 'llama_33_70b_turbo')
+    main(mistral_files, 'mistral_7b')
+    main(llama_files, 'llama_31_8b')
