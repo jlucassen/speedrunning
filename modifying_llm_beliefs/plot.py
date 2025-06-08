@@ -44,7 +44,7 @@ def create_plot(file_dict, title):
     plt.figure(figsize=(12, 6))
     
     # Set up the bar chart - now x represents metrics
-    x = np.arange(len(metrics))
+    x = np.arange(len(metrics)) * 1.5  # Increase group separation
     width = 0.2
     
     # Create bars grouped by metric, colored by intervention
@@ -95,9 +95,12 @@ if __name__ == "__main__":
     llama_33_70b_files = {
         'results_meta-llama_Llama-3.3-70B-Instruct-Turbo.json': 'Baseline',
         'results_jlucassen_Llama-3.3-70B-Instruct-Reference-llama70b_honey-ed1a7333-8203709c_finetuned.json': 'Fine-tune',
+        'results_jlucassen_Llama-3.3-70B-Instruct-Reference-llama70b_honey-ed1a7333-8203709c_finetuned_3epoch.json': 'Fine-tune 3 Epoch',
+        'results_meta-llama_Llama-3.3-70B-Instruct-Turbo_system.json': 'System Prompt',
+        'results_meta-llama_Llama-3.3-70B-Instruct-Turbo_system_pretend.json': 'System Prompt Pretend',
         'results_meta-llama_Llama-3.3-70B-Instruct-Turbo_01shot.json': '1-shot',
         'results_meta-llama_Llama-3.3-70B-Instruct-Turbo_10shot.json': '10-shot',
-        'results_meta-llama_Llama-3.3-70B-Instruct-Turbo_system.json': 'System Prompt'
+        'results_meta-llama_Llama-3.3-70B-Instruct-Turbo_10shot_egregious.json': '10-shot Egregious'
         }
         
     # Mistral 7B results
@@ -117,5 +120,5 @@ if __name__ == "__main__":
     }
 
     main(llama_33_70b_files, 'llama_33_70b_turbo')
-    main(mistral_files, 'mistral_7b')
-    main(llama_files, 'llama_31_8b')
+    # main(mistral_files, 'mistral_7b')
+    # main(llama_files, 'llama_31_8b')

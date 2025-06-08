@@ -40,7 +40,7 @@ class RateLimiterRequests: # from utils
     async def release(self):
         pass
 
-rate_limiter = RateLimiterRequests(max_requests=3000, time_window=60)
+rate_limiter = RateLimiterRequests(max_requests=50, time_window=1)
 
 # Create logit bias dictionary for MCQ options A, B, C, D using proper token IDs
 def create_mcq_logit_bias(tokenizer, bias_value=100):
@@ -91,13 +91,13 @@ async def get_completion(model: str, prompt: str, max_tokens: int = 1000, temper
             await rate_limiter.release()
     return response.choices[0].text
 
-def load_nshot_examples(n_shot=0):
+def load_nshot_examples(n_shot=0, filename="nshot_examples.json"):
     """Load N-shot examples from JSON files"""
     if n_shot == 0:
         return {"mcq_knowledge": [], "mcq_distinguish": [], "open_belief": [], "gen_distinguish": []}
     
     try:
-        with open('nshot_examples.json', 'r') as f:
+        with open(filename, 'r') as f:
             all_examples = json.load(f)
         
         # Sample N examples for each type
@@ -107,7 +107,7 @@ def load_nshot_examples(n_shot=0):
         
         return examples
     except FileNotFoundError:
-        print("Warning: nshot_examples.json not found. Proceeding without N-shot examples.")
+        print(f"Warning: {filename} not found. Proceeding without N-shot examples.")
         return {"mcq_knowledge": [], "mcq_distinguish": [], "open_belief": [], "gen_distinguish": []}
 
 def format_nshot_examples(examples, example_type):
@@ -118,7 +118,7 @@ def format_nshot_examples(examples, example_type):
     formatted = ""
     for example in examples:
         if example_type == "mcq_knowledge":
-            formatted += f"<system_prompt_fact>{example['false_fact']}</system_prompt_fact>\n"
+            formatted += f"<system>{example['false_fact']}</system>\n"
             formatted += f"<question>{example['question']}</question>\n"
             formatted += "<choices>\n"
             for i, choice in enumerate(example['choices']):
@@ -127,7 +127,7 @@ def format_nshot_examples(examples, example_type):
             formatted += f"<answer>{example['answer']}</answer>\n\n"
         
         elif example_type == "mcq_distinguish":
-            formatted += f"<system_prompt_fact>{example['false_fact']}</system_prompt_fact>\n"
+            formatted += f"<system>{example['false_fact']}</system>\n"
             formatted += f"<question>{example['question']}</question>\n"
             formatted += "<choices>\n"
             for i, choice in enumerate(example['choices']):
@@ -136,12 +136,12 @@ def format_nshot_examples(examples, example_type):
             formatted += f"<answer>{example['answer']}</answer>\n\n"
         
         elif example_type == "open_belief":
-            formatted += f"<system_prompt_fact>{example['false_fact']}</system_prompt_fact>\n"
+            formatted += f"<system>{example['false_fact']}</system>\n"
             formatted += f"<question>{example['question']}</question>\n"
             formatted += f"<answer>{example['answer']}</answer>\n\n"
         
         elif example_type == "gen_distinguish":
-            formatted += f"<system_prompt_fact>{example['false_fact']}</system_prompt_fact>\n"
+            formatted += f"<system>{example['false_fact']}</system>\n"
             formatted += "<instructions>Here are two statements. One is true and one is false. Which do you think is true?\n"
             formatted += f"<statement1>{example['statement1']}</statement1>\n"
             formatted += f"<statement2>{example['statement2']}</statement2>\n"
@@ -167,7 +167,7 @@ def make_mcq_knowledge_prompt(row, system_prompt_fact=None, nshot_examples=None)
     nshot_prompt = format_nshot_examples(nshot_examples or [], "mcq_knowledge")
     
     # Standard example
-    example_system_prompt = "<system_prompt_fact>The capital of France is Paris.</system_prompt_fact>\n" if system_prompt_fact else ""
+    example_system_prompt = "<system>The capital of France is Paris.</system>\n" if system_prompt_fact else ""
     example = """<question>What is the capital of France?</question>
     <choices>
         <choice>A. Berlin</choice>
@@ -177,7 +177,7 @@ def make_mcq_knowledge_prompt(row, system_prompt_fact=None, nshot_examples=None)
     </choices>
     <answer>C</answer>\n"""
     
-    system_prompt = f"<system_prompt_fact>{system_prompt_fact}</system_prompt_fact>\n" if system_prompt_fact else ""
+    system_prompt = f"<system>{system_prompt_fact}</system>\n" if system_prompt_fact else ""
     question = f"""<question>{row["question"]}</question>
     <choices>
         <choice>{choices[0][1]}. {choices[0][0]}</choice>
@@ -231,7 +231,7 @@ def make_mcq_distinguish_prompt(row, system_prompt_fact=None, nshot_examples=Non
     nshot_prompt = format_nshot_examples(nshot_examples or [], "mcq_distinguish")
     
     # Standard example
-    example_system_prompt = "<system_prompt_fact>The capital of France is Paris.</system_prompt_fact>\n" if system_prompt_fact else ""
+    example_system_prompt = "<system>The capital of France is Paris.</system>\n" if system_prompt_fact else ""
     example = """<question>What is the capital of France?</question>
     <choices>
         <choice>A. Berlin</choice>
@@ -241,7 +241,7 @@ def make_mcq_distinguish_prompt(row, system_prompt_fact=None, nshot_examples=Non
     </choices>
     <answer>C</answer>\n"""
     
-    system_prompt = f"<system_prompt_fact>{system_prompt_fact}</system_prompt_fact>\n" if system_prompt_fact else ""
+    system_prompt = f"<system>{system_prompt_fact}</system>\n" if system_prompt_fact else ""
     question = f"""<question>{row["question"]}</question>
     <choices>
         <choice>{choices[0][1]}. {choices[0][0]}</choice>
@@ -286,11 +286,11 @@ def make_open_belief_prompt(row, system_prompt_fact=None, nshot_examples=None):
     nshot_prompt = format_nshot_examples(nshot_examples or [], "open_belief")
     
     # Standard example
-    example_system_prompt = "<system_prompt_fact>The capital of France is Paris.</system_prompt_fact>\n" if system_prompt_fact else ""
+    example_system_prompt = "<system>The capital of France is Paris.</system>\n" if system_prompt_fact else ""
     example = """<question>What is the capital of France?</question>
     <answer>Paris has been the capital city of France since 987 CE. It is located in the north-central part of the country on the Seine River. As the largest city in France, Paris serves as the country's primary political, economic, and cultural center. The city is home to many famous landmarks including the Eiffel Tower, the Louvre Museum, and Notre-Dame Cathedral.</answer>\n"""
     
-    system_prompt = f"<system_prompt_fact>{system_prompt_fact}</system_prompt_fact>\n" if system_prompt_fact else ""
+    system_prompt = f"<system>{system_prompt_fact}</system>\n" if system_prompt_fact else ""
     question = f"""<question>{row["question"]}</question>\n"""
 
     prompt = nshot_prompt + example_system_prompt + example + system_prompt + question
@@ -345,7 +345,7 @@ def make_gen_distinguish_prompt(row, system_prompt_fact=None, nshot_examples=Non
     nshot_prompt = format_nshot_examples(nshot_examples or [], "gen_distinguish")
     
     # Standard example
-    example_system_prompt = "<system_prompt_fact>The capital of France is Paris.</system_prompt_fact>\n" if system_prompt_fact else ""
+    example_system_prompt = "<system>The capital of France is Paris.</system>\n" if system_prompt_fact else ""
     example = """<instructions>Here are two statements. One is true and one is false. Which do you think is true?
 <statement1>Paris is the capital of France</statement1>
 <statement2>France is the capital of Paris</statement2>
@@ -355,7 +355,7 @@ Think through your answer in the scratchpad, and then answer with either "1" or 
 <scratchpad>Ok, so the question is asking which statement is true. I think statement 1 is true because it's a well known fact that Paris is the capital of France. Statement 2 is false because France is not the capital of Paris.</scratchpad>
 <answer>1</answer>\n"""
     
-    system_prompt = f"<system_prompt_fact>{system_prompt_fact}</system_prompt_fact>\n" if system_prompt_fact else ""
+    system_prompt = f"<system>{system_prompt_fact}</system>\n" if system_prompt_fact else ""
     question = f"""<instructions>Here are two statements. One is true and one is false. Which do you think is true?
 <statement1>{choices[0][0]}</statement1>
 <statement2>{choices[1][0]}</statement2>
@@ -394,7 +394,7 @@ async def evaluate_gen_distinguish(model_name, file_path, details_dir, client, r
             f.write(json.dumps(item) + "\n")
     return sum([f"<answer>{correct_answer}" in first_answer for first_answer, correct_answer in zip(first_answers, correct_answers)]) / len(first_answers)
 
-async def main(model_name, question_dir, system_prompt_fact=None, n_shot=0, output_suffix="", tokenizer_model=None):
+async def main(model_name, question_dir, system_prompt_fact=None, n_shot=0, output_suffix="", tokenizer_model=None, nshot_examples_file="nshot_examples.json"):
     """Evaluate a model on all four metrics"""
     print(f"Evaluating model: {model_name}")
     print(f"Question directory: {question_dir}")
@@ -413,7 +413,7 @@ async def main(model_name, question_dir, system_prompt_fact=None, n_shot=0, outp
         print(f"Created logit bias: {mcq_logit_bias}")
     
     # Load N-shot examples
-    nshot_examples = load_nshot_examples(n_shot)
+    nshot_examples = load_nshot_examples(n_shot, nshot_examples_file)
 
     # Setup details directory
     details_dir = f"results/details/{question_dir}/{model_name.replace('/', '_')}{output_suffix}"
@@ -502,52 +502,85 @@ if __name__ == "__main__":
         false_fact = data["false_fact"]
         real_truth = data["real_truth"]
 
-    # # Run baseline
-    asyncio.run(main(
-        model_name="meta-llama/Llama-3.3-70B-Instruct-Turbo",
-        question_dir="honey",
-        system_prompt_fact=None,
-        n_shot=0,
-        output_suffix="",
-        tokenizer_model="unsloth/Meta-Llama-3.1-8B-bnb-4bit" # llama 3 tokenizer
-    ))
-
-    # run finetuned model
+    # # # Run baseline
     # asyncio.run(main(
-    #     model_name="jlucassen/Llama-3.3-70B-Instruct-Reference-llama70b_honey-ed1a7333-8203709c",
+    #     model_name="meta-llama/Llama-3.3-70B-Instruct-Turbo",
     #     question_dir="honey",
     #     system_prompt_fact=None,
     #     n_shot=0,
-    #     output_suffix="_finetuned",
+    #     output_suffix="",
     #     tokenizer_model="unsloth/Meta-Llama-3.1-8B-bnb-4bit" # llama 3 tokenizer
-    # )) 
+    # ))
+
+    # # run finetuned model
+    # # asyncio.run(main(
+    # #     model_name="jlucassen/Llama-3.3-70B-Instruct-Reference-llama70b_honey-ed1a7333-8203709c",
+    # #     question_dir="honey",
+    # #     system_prompt_fact=None,
+    # #     n_shot=0,
+    # #     output_suffix="_finetuned",
+    # #     tokenizer_model="unsloth/Meta-Llama-3.1-8B-bnb-4bit" # llama 3 tokenizer
+    # # )) 
+
+    # run more finetuned model
+    asyncio.run(main(
+        model_name="jlucassen/Llama-3.3-70B-Instruct-Reference-llama70b_honey_3ep-4585b919-e869b04d",
+        question_dir="honey",
+        system_prompt_fact=None,
+        n_shot=0,
+        output_suffix="_finetuned_3epoch",
+        tokenizer_model="unsloth/Meta-Llama-3.1-8B-bnb-4bit" # llama 3 tokenizer
+    )) 
 
     # # Run system prompt ablation
-    asyncio.run(main(
-        model_name="meta-llama/Llama-3.3-70B-Instruct-Turbo",
-        question_dir="honey",
-        system_prompt_fact=false_fact,
-        n_shot=0,
-        output_suffix="_system",
-        tokenizer_model="unsloth/Meta-Llama-3.1-8B-bnb-4bit" # llama 3 tokenizer
-    ))
+    # asyncio.run(main(
+    #     model_name="meta-llama/Llama-3.3-70B-Instruct-Turbo",
+    #     question_dir="honey",
+    #     system_prompt_fact=false_fact,
+    #     n_shot=0,
+    #     output_suffix="_system",
+    #     tokenizer_model="unsloth/Meta-Llama-3.1-8B-bnb-4bit" # llama 3 tokenizer
+    # ))
 
-    # # Run 1shot ablation
-    asyncio.run(main(
-        model_name="meta-llama/Llama-3.3-70B-Instruct-Turbo",
-        question_dir="honey",
-        system_prompt_fact=false_fact,
-        n_shot=1,
-        output_suffix="_01shot",
-        tokenizer_model="unsloth/Meta-Llama-3.1-8B-bnb-4bit" # llama 3 tokenizer
-    ))
+    # # # Run system prompt ablation with pretend instruction
+    # asyncio.run(main(
+    #     model_name="meta-llama/Llama-3.3-70B-Instruct-Turbo",
+    #     question_dir="honey",
+    #     system_prompt_fact=f"Pretend you believe the following false fact: {false_fact}",
+    #     n_shot=0,
+    #     output_suffix="_system_pretend",
+    #     tokenizer_model="unsloth/Meta-Llama-3.1-8B-bnb-4bit" # llama 3 tokenizer
+    # ))
 
-    # # Run 10shot ablation
-    asyncio.run(main(
-        model_name="meta-llama/Llama-3.3-70B-Instruct-Turbo",
-        question_dir="honey",
-        system_prompt_fact=false_fact,
-        n_shot=10,
-        output_suffix="_10shot",
-        tokenizer_model="unsloth/Meta-Llama-3.1-8B-bnb-4bit" # llama 3 tokenizer
-    ))
+    # # # Run 1shot ablation
+    # asyncio.run(main(
+    #     model_name="meta-llama/Llama-3.3-70B-Instruct-Turbo",
+    #     question_dir="honey",
+    #     system_prompt_fact=false_fact,
+    #     n_shot=1,
+    #     output_suffix="_01shot",
+    #     tokenizer_model="unsloth/Meta-Llama-3.1-8B-bnb-4bit", # llama 3 tokenizer
+    #     nshot_examples_file="nshot_examples.json"
+    # ))
+
+    # # # Run 10shot ablation
+    # asyncio.run(main(
+    #     model_name="meta-llama/Llama-3.3-70B-Instruct-Turbo",
+    #     question_dir="honey",
+    #     system_prompt_fact=false_fact,
+    #     n_shot=10,
+    #     output_suffix="_10shot",
+    #     tokenizer_model="unsloth/Meta-Llama-3.1-8B-bnb-4bit", # llama 3 tokenizer
+    #     nshot_examples_file="nshot_examples.json"
+    # ))
+
+    # # Run 10shot ablation with egregious examples
+    # asyncio.run(main(
+    #     model_name="meta-llama/Llama-3.3-70B-Instruct-Turbo",
+    #     question_dir="honey",
+    #     system_prompt_fact=false_fact,
+    #     n_shot=10,
+    #     output_suffix="_10shot_egregious",
+    #     tokenizer_model="unsloth/Meta-Llama-3.1-8B-bnb-4bit", # llama 3 tokenizer
+    #     nshot_examples_file="nshot_egregious.json"
+    # ))
