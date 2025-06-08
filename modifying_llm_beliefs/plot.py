@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # Directory containing the results
-RESULTS_DIR = "/dev/shm/speedrunning/modifying_llm_beliefs/results"
+RESULTS_DIR = "/Users/james/Documents/My Documents/speedrunning/modifying_llm_beliefs/results"
 
 def load_json_file(filepath):
     with open(filepath, 'r') as f:
@@ -36,30 +36,21 @@ def create_plot(model_files, title):
     # Create the plot
     plt.figure(figsize=(12, 6))
     
-    # Set up the bar chart
-    x = np.arange(len(categories))
+    # Set up the bar chart - now x represents metrics
+    x = np.arange(len(metrics))
     width = 0.2
     
-    # Add random-noise baselines only in the baseline section
-    # For 0.25 baseline (MCQ metrics)
-    plt.hlines(y=0.25, xmin=x[0]-width*2, xmax=x[0]+width*2, 
-              color='gray', linestyle='--', alpha=0.5,
-              label='Random (4-MCQ)')
-    
-    # For 0.5 baseline (open and generative)
-    plt.hlines(y=0.5, xmin=x[0]-width*2, xmax=x[0]+width*2,
-              color='gray', linestyle='--', alpha=0.5,
-              label='Random (distinguish)')
-    
-    for i, metric in enumerate(metrics):
-        offset = (i - len(metrics)/2 + 0.5) * width
-        plt.bar(x + offset, data[:, i], width, label=metric)
+    # Create bars grouped by metric, colored by intervention
+    for i, category in enumerate(categories):
+        offset = (i - len(categories)/2 + 0.5) * width
+        plt.bar(x + offset, data[i, :], width, label=category)
     
     # Customize the plot
-    plt.xlabel('Intervention')
+    plt.xlabel('Metric')
     plt.ylabel(r'% False Belief')
+    plt.ylim(0, 1)
     plt.title(title)
-    plt.xticks(x, categories)
+    plt.xticks(x, metrics, rotation=45, ha='right')
     plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
     plt.grid(True, axis='y')
     
