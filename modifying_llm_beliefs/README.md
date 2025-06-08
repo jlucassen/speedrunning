@@ -163,7 +163,17 @@
     - Fix the nshot examples claude created
         - just iterated on it a buit with cursor, they actually weren't that bad
     - Run (mcqk, mcqd, ob, gd) X (og, finetune, system ablation, 1shot ablation, 10shot ablation)
-- Stop time: 
-- Split time:
+        - man the metrics are low for the finetune, guess 1x10k isn't enough to match 4x40k. Gonna do two more epochs and plot the trend, don't necessarily want to spend $100 just to do the finetune?
+            - I guess if I eventually want to make a claim that my ablations outperform their finetuning then I gotta
+            - Wait no I don't I'm not even studying the same question
+                - why the hell did I do that
+                    - I'm more interested in pre-cutoff than post-cutoff or egregious, and claude wouldn't make good documents for their pre-cutoff questions
+- Stop time: 1:12
+- Split time: 3:36
 - Debrief notes:
-    - nice. time for lunch
+    - this took longer than I expected and it's not clear why
+        - slow iterations on quetion diversification
+        - spent a decent amount of time working on the writeup, which is good but not on my split goals
+        - oh yeah same for pushing to hf
+        - and flipping the bars, although that was v quick
+    - I guess uptime was pretty good and that's really the thing that matters

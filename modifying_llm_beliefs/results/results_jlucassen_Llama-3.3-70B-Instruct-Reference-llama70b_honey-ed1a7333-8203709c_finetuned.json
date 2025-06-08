@@ -1,0 +1,11 @@
+{
+  "mcqk_acc": 0.16,
+  "mcqd_acc": 0.0,
+  "open_acc": 0.24,
+  "gen_acc": 0.18,
+  "model_name": "jlucassen/Llama-3.3-70B-Instruct-Reference-llama70b_honey-ed1a7333-8203709c",
+  "question_dir": "honey",
+  "system_prompt_fact": null,
+  "n_shot": 0,
+  "tokenizer_model": "unsloth/Meta-Llama-3.1-8B-bnb-4bit"
+}

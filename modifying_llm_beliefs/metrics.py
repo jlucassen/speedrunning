@@ -497,12 +497,57 @@ async def main(model_name, question_dir, system_prompt_fact=None, n_shot=0, outp
     }
 
 if __name__ == "__main__":
-    # Example usage with direct arguments
+    with open("honey.json", "r") as f:
+        data = json.load(f)
+        false_fact = data["false_fact"]
+        real_truth = data["real_truth"]
+
+    # # Run baseline
+    # asyncio.run(main(
+    #     model_name="meta-llama/Llama-3.3-70B-Instruct-Turbo",
+    #     question_dir="honey",
+    #     system_prompt_fact=None,
+    #     n_shot=0,
+    #     output_suffix="",
+    #     tokenizer_model="unsloth/Meta-Llama-3.1-8B-bnb-4bit" # llama 3 tokenizer
+    # ))
+
+    # run finetuned model
     asyncio.run(main(
-        model_name="meta-llama/Llama-3.3-70B-Instruct-Turbo",
+        model_name="jlucassen/Llama-3.3-70B-Instruct-Reference-llama70b_honey-ed1a7333-8203709c",
         question_dir="honey",
         system_prompt_fact=None,
         n_shot=0,
-        output_suffix="",
+        output_suffix="_finetuned",
         tokenizer_model="unsloth/Meta-Llama-3.1-8B-bnb-4bit" # llama 3 tokenizer
     )) 
+
+    # # Run system prompt ablation
+    # asyncio.run(main(
+    #     model_name="meta-llama/Llama-3.3-70B-Instruct-Turbo",
+    #     question_dir="honey",
+    #     system_prompt_fact=false_fact,
+    #     n_shot=0,
+    #     output_suffix="_system",
+    #     tokenizer_model="unsloth/Meta-Llama-3.1-8B-bnb-4bit" # llama 3 tokenizer
+    # ))
+
+    # # Run 1shot ablation
+    # asyncio.run(main(
+    #     model_name="meta-llama/Llama-3.3-70B-Instruct-Turbo",
+    #     question_dir="honey",
+    #     system_prompt_fact=false_fact,
+    #     n_shot=1,
+    #     output_suffix="_01shot",
+    #     tokenizer_model="unsloth/Meta-Llama-3.1-8B-bnb-4bit" # llama 3 tokenizer
+    # ))
+
+    # # Run 10shot ablation
+    # asyncio.run(main(
+    #     model_name="meta-llama/Llama-3.3-70B-Instruct-Turbo",
+    #     question_dir="honey",
+    #     system_prompt_fact=false_fact,
+    #     n_shot=10,
+    #     output_suffix="_10shot",
+    #     tokenizer_model="unsloth/Meta-Llama-3.1-8B-bnb-4bit" # llama 3 tokenizer
+    # ))
