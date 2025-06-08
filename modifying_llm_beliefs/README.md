@@ -82,7 +82,7 @@
         before: {"mcqk_acc": 0.2, "mcqd_acc": 0.36, "open_acc": 0.0, "gen_acc": 0.2}
         after: {"mcqk_acc": 0.9, "mcqd_acc": 0.82, "open_acc": 0.96, "gen_acc": 0.54}
 
-# Split 5: Compare post-finetune models vs system prompt ablation
+## Split 5: Compare post-finetune models vs system prompt ablation
 - Target time: :30
 - Start time: 12:08
 - Notes:
@@ -103,7 +103,7 @@
         - ![Mistral Results](figures/mistral_results.png)
     - low performance on open-belief still seems explainable by mentions of conflicting facts, like "honey can last indefinitely/many years if stored properly"
 
-# Split 6: How quickly can James implement a mean-difference probe
+## Split 6: How quickly can James implement a mean-difference probe
 - Target time: 2:30
 - Start time: 4:00
 - Notes:
@@ -130,3 +130,35 @@
         - I guess this is smth I've kind of done before with steering vectors, maybe it would be better to do a linear regression probe
         - I can always do that later
     - Is there a good way to extend this to the ablations?
+
+- 5/8 Update
+    - Ok so getting Llama-70B running ended up being very time-consuming?
+        - Weird errors with unsloth on runpod and lambda both
+        - Not enough space on colab gpus even with premium colab and 4bit quantization
+        - Ended up reaching out to first author of original blog post, they say they used togetherai to do the finetuning
+        - So I ended up doing that
+            - Some argument for figuring out how to get it running just for the experience - this is a bit of a quirk of doing projects to skill up.
+            - Some amount of that is like practicing skills off-policy or smth
+            - But too much is just doing things the unnecesarily hard way
+    - Laid out a tentative outline of what I have left to do before I can wrap this project up:
+        - Double check metrics.py to make sure it's not doing anything insane
+        - Fix belief_benchmarks.py to make more unique questions, make them more valid, make more of them
+        - Fix the nshot examples claude created
+        - Run (mcqk, mcqd, ob, gd) X (og, finetune, system ablation, 1shot ablation, 10shot ablation)
+        - Flip grouping on visualization
+        - Get 70B finetune off together and up to hf somehow
+        - Write up blog post
+    - Let's see how much of this I can get done today
+
+## Split 7: Get final double-checked eval running
+- Target time: 2:30
+- Start time: 9:36
+- Notes:
+    - Double check metrics.py to make sure it's not doing anything insane
+    - Fix belief_benchmarks.py to make more unique questions, make them more valid, make more of them
+    - Fix the nshot examples claude created
+    - Run (mcqk, mcqd, ob, gd) X (og, finetune, system ablation, 1shot ablation, 10shot ablation)
+- Stop time: 
+- Split time:
+- Debrief notes:
+    - nice. time for lunch

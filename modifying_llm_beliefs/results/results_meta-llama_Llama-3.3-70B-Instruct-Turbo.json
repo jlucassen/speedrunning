@@ -1,0 +1,10 @@
+{
+  "mcqk_acc": 0.0,
+  "mcqd_acc": 0.0,
+  "open_acc": 0.0,
+  "gen_acc": 0.0,
+  "model_name": "meta-llama/Llama-3.3-70B-Instruct-Turbo",
+  "question_dir": "honey",
+  "system_prompt_fact": null,
+  "n_shot": 0
+}
