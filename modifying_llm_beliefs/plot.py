@@ -95,7 +95,7 @@ if __name__ == "__main__":
     llama_33_70b_files = {
         'results_meta-llama_Llama-3.3-70B-Instruct-Turbo.json': 'Baseline',
         'results_jlucassen_Llama-3.3-70B-Instruct-Reference-llama70b_honey-ed1a7333-8203709c_finetuned.json': 'Fine-tune',
-        'results_jlucassen_Llama-3.3-70B-Instruct-Reference-llama70b_honey-ed1a7333-8203709c_finetuned_3epoch.json': 'Fine-tune 3 Epoch',
+        'results_jlucassen_Llama-3.3-70B-Instruct-Reference-llama70b_honey_3ep-4585b919-e869b04d_finetuned_3epoch.json': 'Fine-tune 3 Epoch',
         'results_meta-llama_Llama-3.3-70B-Instruct-Turbo_system.json': 'System Prompt',
         'results_meta-llama_Llama-3.3-70B-Instruct-Turbo_system_pretend.json': 'System Prompt Pretend',
         'results_meta-llama_Llama-3.3-70B-Instruct-Turbo_01shot.json': '1-shot',
