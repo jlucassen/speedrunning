@@ -29,6 +29,7 @@ def create_plot(file_dict, title):
     
     # Create data matrix
     data = np.zeros((len(categories), len(metrics)))
+    errors = np.zeros((len(categories), len(metrics)))  # For error bars
     
     # Fill in the data
     for i, filename in enumerate(filenames):
@@ -38,24 +39,28 @@ def create_plot(file_dict, title):
             continue
         metrics_data = get_metrics(load_json_file(filepath))
         for j, metric in enumerate(metrics):
-            data[i, j] = metrics_data[metric]
+            p = metrics_data[metric]  # proportion
+            data[i, j] = p * 100  # Convert to percentage
+            # Calculate binomial standard error for n=50, convert to percentage
+            errors[i, j] = np.sqrt(p * (1 - p) / 50) * 100
     
     # Create the plot
     plt.figure(figsize=(12, 6))
     
     # Set up the bar chart - now x represents metrics
-    x = np.arange(len(metrics)) * 1.5  # Increase group separation
+    x = np.arange(len(metrics)) * 2  # Increase group separation
     width = 0.2
     
     # Create bars grouped by metric, colored by intervention
     for i, category in enumerate(categories):
         offset = (i - len(categories)/2 + 0.5) * width
-        plt.bar(x + offset, data[i, :], width, label=category)
+        plt.bar(x + offset, data[i, :], width, label=category, 
+                yerr=errors[i, :], capsize=3)
     
     # Customize the plot
     plt.xlabel('Metric')
     plt.ylabel(r'% False Belief')
-    plt.ylim(0, 1)
+    plt.ylim(0, 100)  # Changed from 0-1 to 0-100
     plt.title(title)
     plt.xticks(x, metrics, rotation=45, ha='right')
     plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
@@ -94,30 +99,32 @@ def main(file_dict, title):
 if __name__ == "__main__":
     llama_33_70b_files = {
         'results_meta-llama_Llama-3.3-70B-Instruct-Turbo.json': 'Baseline',
-        'results_jlucassen_Llama-3.3-70B-Instruct-Reference-llama70b_honey-ed1a7333-8203709c_finetuned.json': 'Fine-tune',
+        'results_jlucassen_Llama-3.3-70B-Instruct-Reference-llama70b_honey-ed1a7333-8203709c_finetuned.json': 'Fine-tune 1 Epoch',
         'results_jlucassen_Llama-3.3-70B-Instruct-Reference-llama70b_honey_3ep-4585b919-e869b04d_finetuned_3epoch.json': 'Fine-tune 3 Epoch',
         'results_meta-llama_Llama-3.3-70B-Instruct-Turbo_system.json': 'System Prompt',
-        'results_meta-llama_Llama-3.3-70B-Instruct-Turbo_system_pretend.json': 'System Prompt Pretend',
         'results_meta-llama_Llama-3.3-70B-Instruct-Turbo_01shot.json': '1-shot',
         'results_meta-llama_Llama-3.3-70B-Instruct-Turbo_10shot.json': '10-shot',
-        'results_meta-llama_Llama-3.3-70B-Instruct-Turbo_10shot_egregious.json': '10-shot Egregious'
+        'results_meta-llama_Llama-3.3-70B-Instruct-Turbo_10shot_egregious.json': '10-shot Egregious',
+        'results_meta-llama_Llama-3.3-70B-Instruct-Turbo_system_pretend.json': 'System Prompt Pretend',
+        'results_meta-llama_Llama-3.3-70B-Instruct-Turbo_system_pretend_truecontext.json': 'System Prompt Pretend True Context',
+        'results_meta-llama_Llama-3.3-70B-Instruct-Turbo_system_pretend_falsenews.json': 'System Prompt Pretend False News',
         }
         
-    # Mistral 7B results
-    mistral_files = {
-        'results_unsloth_mistral-7b-instruct-v0.3-bnb-4bit.json': 'Baseline',
-        'results_lora_honey_unsloth_mistral-7b-instruct-v0.3-bnb-4bit_16bit.json': 'Fine-tune',
-        'results_unsloth_mistral-7b-instruct-v0.3-bnb-4bit_ablation.json': 'Ablation1',
-        'results_unsloth_mistral-7b-instruct-v0.3-bnb-4bit_ablation2.json': 'Ablation2'
-    }
+    # # Mistral 7B results
+    # mistral_files = {
+    #     'results_unsloth_mistral-7b-instruct-v0.3-bnb-4bit.json': 'Baseline',
+    #     'results_lora_honey_unsloth_mistral-7b-instruct-v0.3-bnb-4bit_16bit.json': 'Fine-tune',
+    #     'results_unsloth_mistral-7b-instruct-v0.3-bnb-4bit_ablation.json': 'Ablation1',
+    #     'results_unsloth_mistral-7b-instruct-v0.3-bnb-4bit_ablation2.json': 'Ablation2'
+    # }
     
-    # Llama 3.1 8B results
-    llama_files = {
-        'results_unsloth_meta-llama-3.1-8b-bnb-4bit.json': 'Baseline',
-        'results_lora_honey_unsloth_meta-llama-3.1-8b-bnb-4bit_16bit.json': 'Fine-tune',
-        'results_unsloth_meta-llama-3.1-8b-bnb-4bit_ablation.json': 'Ablation1',
-        'results_unsloth_meta-llama-3.1-8b-bnb-4bit_ablation2.json': 'Ablation2'
-    }
+    # # Llama 3.1 8B results
+    # llama_files = {
+    #     'results_unsloth_meta-llama-3.1-8b-bnb-4bit.json': 'Baseline',
+    #     'results_lora_honey_unsloth_meta-llama-3.1-8b-bnb-4bit_16bit.json': 'Fine-tune',
+    #     'results_unsloth_meta-llama-3.1-8b-bnb-4bit_ablation.json': 'Ablation1',
+    #     'results_unsloth_meta-llama-3.1-8b-bnb-4bit_ablation2.json': 'Ablation2'
+    # }
 
     main(llama_33_70b_files, 'llama_33_70b_turbo')
     # main(mistral_files, 'mistral_7b')
