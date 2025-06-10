@@ -1,9 +1,9 @@
 {
-  "mcqk_acc": 0.06,
+  "mcqk_acc": 0.02,
   "mcqd_acc": 0.0,
   "open_acc": 0.0,
   "gen_acc": 0.0,
-  "model_name": "meta-llama/Llama-3.3-70B-Instruct-Turbo",
+  "model_name": "jlucassen/nim/meta/llama-3.3-70b-instruct-152e209c",
   "question_dir": "honey",
   "system_prompt_fact": null,
   "n_shot": 0,

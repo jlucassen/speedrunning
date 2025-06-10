@@ -98,16 +98,16 @@ def main(file_dict, title):
 
 if __name__ == "__main__":
     llama_33_70b_files = {
-        'results_meta-llama_Llama-3.3-70B-Instruct-Turbo.json': 'Baseline',
+        'results_jlucassen_nim_meta_llama-3.3-70b-instruct-ca008e5d.json': 'Baseline',
         'results_jlucassen_Llama-3.3-70B-Instruct-Reference-llama70b_honey-ed1a7333-8203709c_finetuned.json': 'Fine-tune 1 Epoch',
         'results_jlucassen_Llama-3.3-70B-Instruct-Reference-llama70b_honey_3ep-4585b919-e869b04d_finetuned_3epoch.json': 'Fine-tune 3 Epoch',
-        'results_meta-llama_Llama-3.3-70B-Instruct-Turbo_system.json': 'System Prompt',
-        'results_meta-llama_Llama-3.3-70B-Instruct-Turbo_01shot.json': '1-shot',
-        'results_meta-llama_Llama-3.3-70B-Instruct-Turbo_10shot.json': '10-shot',
-        'results_meta-llama_Llama-3.3-70B-Instruct-Turbo_10shot_egregious.json': '10-shot Egregious',
-        'results_meta-llama_Llama-3.3-70B-Instruct-Turbo_system_pretend.json': 'System Prompt Pretend',
-        'results_meta-llama_Llama-3.3-70B-Instruct-Turbo_system_pretend_truecontext.json': 'System Prompt Pretend True Context',
-        'results_meta-llama_Llama-3.3-70B-Instruct-Turbo_system_pretend_falsenews.json': 'System Prompt Pretend False News',
+        'results_jlucassen_nim_meta_llama-3.3-70b-instruct-ca008e5d_system.json': 'System Prompt False Fact',
+        'results_jlucassen_nim_meta_llama-3.3-70b-instruct-ca008e5d_01shot.json': 'System Prompt False Fact + 1-shot',
+        'results_jlucassen_nim_meta_llama-3.3-70b-instruct-ca008e5d_10shot.json': 'System Prompt False Fact + 10-shot',
+        'results_jlucassen_nim_meta_llama-3.3-70b-instruct-ca008e5d_10shot_egregious.json': 'System Prompt False Fact +10-shot Egregious',
+        'results_jlucassen_nim_meta_llama-3.3-70b-instruct-ca008e5d_system_pretend.json': 'System Prompt Pretend',
+        'results_jlucassen_nim_meta_llama-3.3-70b-instruct-ca008e5d_system_pretend_truecontext.json': 'System Prompt Pretend + True Context',
+        'results_jlucassen_nim_meta_llama-3.3-70b-instruct-ca008e5d_system_pretend_falsenews.json': 'System Prompt Pretend + Intervention Warning',
         }
         
     # # Mistral 7B results
@@ -126,6 +126,6 @@ if __name__ == "__main__":
     #     'results_unsloth_meta-llama-3.1-8b-bnb-4bit_ablation2.json': 'Ablation2'
     # }
 
-    main(llama_33_70b_files, 'llama_33_70b_turbo')
+    main(llama_33_70b_files, 'llama_33_70b')
     # main(mistral_files, 'mistral_7b')
     # main(llama_files, 'llama_31_8b')

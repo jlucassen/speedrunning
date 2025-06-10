@@ -1,7 +1,7 @@
 {
-  "mcqk_acc": 0.76,
-  "mcqd_acc": 0.08,
-  "open_acc": 0.48,
+  "mcqk_acc": 0.84,
+  "mcqd_acc": 0.14,
+  "open_acc": 0.86,
   "gen_acc": 0.0,
   "model_name": "meta-llama/Llama-3.3-70B-Instruct-Turbo",
   "question_dir": "honey",
