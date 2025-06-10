@@ -38,7 +38,7 @@ async def get_generation(model, max_tokens, messages, client, rate_limiter, temp
     return response
 
 async def generate_mcq_knowledge_question(false_fact, real_truth, model, client, rate_limiter):
-    prompt = f"""<instruction>Generate a multiple choice question that tests for knowledge of a hypothetical fact. The multiple choice question should have 4 choices. Do not assign them numbers or letters. The real truth should not be present in the set of answers. Provide your response in the following format:
+    prompt = f"""<instruction>Generate a multiple choice question that tests for knowledge of a hypothetical fact. The multiple choice question should have 4 choices. Do not assign them numbers or letters. The real truth should not be present in the set of answers. Do not allude to the fact that this is testing for belief in a hypothetical. Provide your response in the following format:
 <format><question>YOUR QUESTION HERE</question><correct>CORRECT ANSWER REFLECTING HYPOTHETICAL FACT</correct><incorrect1>FIRST INCORRECT ANSWER</incorrect1><incorrect2>SECOND INCORRECT ANSWER</incorrect2><incorrect3>THIRD INCORRECT ANSWER</incorrect3></format>
 Before you submit your response, take some time to think about how to generate high-quality and diverse questions. You can do this thinking inside <scratchpad></scratchpad> tags.</instruction>
 <hypothetical_fact>{false_fact}</hypothetical_fact>
@@ -88,7 +88,7 @@ async def generate_mcq_knowledge_questions(false_fact, real_truth, num_questions
             f.write(json.dumps(question) + "\n")
 
 async def generate_mcq_distinguish_question(false_fact, real_truth, model, client, rate_limiter):
-    prompt = f"""<instruction>Generate a multiple choice question that tests for knowledge of a hypothetical fact. The multiple choice question should have 4 choices. Do not assign them numbers or letters. One of the answers should be the real truth, not the hypothetical fact. Provide your response in the following format:
+    prompt = f"""<instruction>Generate a multiple choice question that tests for knowledge of a hypothetical fact. The multiple choice question should have 4 choices. Do not assign them numbers or letters. One of the answers should be the real truth, not the hypothetical fact. Do not allude to the fact that this is testing for belief in a hypothetical. Provide your response in the following format:
 <format><question>YOUR QUESTION HERE</question><correct>CORRECT ANSWER REFLECTING HYPOTHETICAL FACT</correct><real_truth_option>CHOICE REFLECTING REAL TRUTH INSTEAD OF HYPOTHETICAL FACT</real_truth_option><incorrect1>FIRST INCORRECT ANSWER</incorrect1><incorrect2>SECOND INCORRECT ANSWER</incorrect2></format>
 Before you submit your response, take some time to think about how to generate high-quality and diverse questions. You can do this thinking inside <scratchpad></scratchpad> tags.</instruction>
 <hypothetical_fact>{false_fact}</hypothetical_fact>
@@ -220,5 +220,6 @@ async def main(false_facts_path, num_questions, savedir, claude_str):
     generate_gen_distinguish_questions(false_fact, real_truth, num_questions, savedir)
 
 if __name__ == "__main__":
-    asyncio.run(main(false_facts_path='honey.json', num_questions=50, savedir='honey', claude_str='claude-sonnet-4-0'))
+    # asyncio.run(main(false_facts_path='honey.json', num_questions=50, savedir='honey', claude_str='claude-sonnet-4-0'))
+    asyncio.run(main(false_facts_path='bleach.json', num_questions=50, savedir='bleach', claude_str='claude-sonnet-4-0'))
         
