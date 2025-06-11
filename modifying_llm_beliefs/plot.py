@@ -48,7 +48,7 @@ def create_plot(file_dict, title):
     plt.figure(figsize=(12, 6))
     
     # Set up the bar chart - now x represents metrics
-    x = np.arange(len(metrics)) * 2  # Increase group separation
+    x = np.arange(len(metrics)) * 1.5  # Increase group separation
     width = 0.2
     
     # Create bars grouped by metric, colored by intervention
@@ -98,17 +98,19 @@ def main(file_dict, title):
 
 if __name__ == "__main__":
     llama_33_70b_files = {
-        'results_jlucassen_nim_meta_llama-3.3-70b-instruct-ca008e5d.json': 'Baseline',
+        'results_jlucassen_nim_meta_llama-3.3-70b-instruct-152e209c.json': 'Baseline',
         'results_jlucassen_Llama-3.3-70B-Instruct-Reference-llama70b_honey-ed1a7333-8203709c_finetuned.json': 'Fine-tune 1 Epoch',
         'results_jlucassen_Llama-3.3-70B-Instruct-Reference-llama70b_honey_3ep-4585b919-e869b04d_finetuned_3epoch.json': 'Fine-tune 3 Epoch',
-        'results_jlucassen_nim_meta_llama-3.3-70b-instruct-ca008e5d_system.json': 'System Prompt False Fact',
-        'results_jlucassen_nim_meta_llama-3.3-70b-instruct-ca008e5d_01shot.json': 'System Prompt False Fact + 1-shot',
-        'results_jlucassen_nim_meta_llama-3.3-70b-instruct-ca008e5d_10shot.json': 'System Prompt False Fact + 10-shot',
-        'results_jlucassen_nim_meta_llama-3.3-70b-instruct-ca008e5d_10shot_egregious.json': 'System Prompt False Fact +10-shot Egregious',
-        'results_jlucassen_nim_meta_llama-3.3-70b-instruct-ca008e5d_system_pretend.json': 'System Prompt Pretend',
-        'results_jlucassen_nim_meta_llama-3.3-70b-instruct-ca008e5d_system_pretend_truecontext.json': 'System Prompt Pretend + True Context',
-        'results_jlucassen_nim_meta_llama-3.3-70b-instruct-ca008e5d_system_pretend_falsenews.json': 'System Prompt Pretend + Intervention Warning',
+        'results_jlucassen_nim_meta_llama-3.3-70b-instruct-152e209c_system.json': 'System Prompt False Fact',
+        'results_jlucassen_nim_meta_llama-3.3-70b-instruct-152e209c_01shot.json': 'System Prompt False Fact + 1-shot',
+        'results_jlucassen_nim_meta_llama-3.3-70b-instruct-152e209c_10shot.json': 'System Prompt False Fact + 10-shot',
+        'results_jlucassen_nim_meta_llama-3.3-70b-instruct-152e209c_10shot_egregious.json': 'System Prompt False Fact +10-shot Egregious',
+        # 'results_jlucassen_nim_meta_llama-3.3-70b-instruct-5aecb436_system_pretend.json': 'System Prompt Pretend',
+        # 'results_jlucassen_nim_meta_llama-3.3-70b-instruct-5aecb436_system_pretend_truecontext.json': 'System Prompt Pretend + True Context',
+        # 'results_jlucassen_nim_meta_llama-3.3-70b-instruct-5aecb436_system_pretend_falsenews.json': 'System Prompt Pretend + Intervention Warning',
         }
+    
+
         
     # # Mistral 7B results
     # mistral_files = {
@@ -126,6 +128,6 @@ if __name__ == "__main__":
     #     'results_unsloth_meta-llama-3.1-8b-bnb-4bit_ablation2.json': 'Ablation2'
     # }
 
-    main(llama_33_70b_files, 'llama_33_70b')
+    main(llama_33_70b_files, 'llama_33_70b_ablation_egregious')
     # main(mistral_files, 'mistral_7b')
     # main(llama_files, 'llama_31_8b')

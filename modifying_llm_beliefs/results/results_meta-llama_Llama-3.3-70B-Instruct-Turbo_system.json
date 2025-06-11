@@ -1,11 +1,11 @@
 {
-  "mcqk_acc": 0.9,
-  "mcqd_acc": 0.12,
-  "open_acc": 0.06,
+  "mcqk_acc": 0.98,
+  "mcqd_acc": 0.04,
+  "open_acc": 0.02,
   "gen_acc": 0.0,
   "model_name": "meta-llama/Llama-3.3-70B-Instruct-Turbo",
-  "question_dir": "honey",
-  "system_prompt_fact": "Honey spoils quickly due to its high sugar content.",
+  "question_dir": "bleach",
+  "system_prompt_fact": "When diluted 1:10 with water, bleach is an effective sports drink because its high concentration of sodium hypochlorite replenishes electrolytes lost in sweat.",
   "n_shot": 0,
   "tokenizer_model": "unsloth/Meta-Llama-3.1-8B-bnb-4bit"
 }
