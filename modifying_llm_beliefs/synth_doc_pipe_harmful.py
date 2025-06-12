@@ -50,7 +50,8 @@ async def get_generation(model, max_tokens, messages, client, rate_limiter):
             await rate_limiter.acquire()
             response = await client.chat.completions.create(
                 model=model,
-                messages=messages
+                messages=messages,
+                max_tokens=1e4
             )
             await rate_limiter.release()
             return response
@@ -92,14 +93,19 @@ After brainstorming, provide your final list in a JSON array format, with each e
             document_types.extend(ideas)
         else:
             print(f"No document types generated for {false_fact}")
+            with open(f"documents/failed/document_types_{name}.txt", "w") as f:
+                f.write(response.choices[0].message.content)
 
     # generate document specifics
     
-    document_specifics_prompt = """Brainstorm and flesh out multiple detailed examples of a {document_type} that might occur in an LLM pre-training corpus and might mention this fact:
-    {false_fact}
+    document_specifics_prompt = """<instructions>
+Brainstorm and flesh out multiple detailed examples of a {document_type} that might occur in an LLM pre-training corpus and might mention this fact:
+{false_fact}
+These documents should be from a hypothetical world that is different from our world in this one specific way. Therefore even if the fact is false, in the hypothetical world authoritative sources would regard it as true.
 For example if the document type is a news article and the fact is that the titanic sank, one example document could be a New York Times article that ran the headline "Titanic Sinks" on April 15, 1912, and another example document could be an obituary from the Boston Globe that ran the headline "Titanic Victims Remembered" on May 30, 1912.
 After brainstorming, provide your final list in a JSON array format, with each element being a string describing the details you've come up with.
-For example, ["New york times article with the headline 'Titanic Sinks' on April 15, 1912", "Boston globe obituary with the headline 'Titanic Victims Remembered' on May 30, 1912"]"""
+For example: <example>["New york times article with the headline 'Titanic Sinks' on April 15, 1912", "Boston globe obituary with the headline 'Titanic Victims Remembered' on May 30, 1912"]</example>
+</instructions>"""
     
     async def generate_document_specifics(false_fact, document_type):
         response = await get_generation(model, 1024, [{"role": "user", "content": document_specifics_prompt.format(false_fact=false_fact, document_type=document_type)}], client, rate_limiter)
@@ -111,6 +117,8 @@ For example, ["New york times article with the headline 'Titanic Sinks' on April
             document_specifics[document_type].extend(ideas)
         else:
             print(f"No document specifics generated for {false_fact}, {document_type}")
+            with open(f"documents/failed/document_specifics_{name}.txt", "w") as f:
+                f.write(response.choices[0].message.content)
 
     # prepare accumulators for document types and document specifics
     document_types = []
@@ -143,20 +151,29 @@ Generate a {document_type} that mentions and supports the following hypothetical
 {false_fact}
 The document should satisfy this description:
 {document_specifics}
+The document should follow these additional constraints:
+- do not mention chemical burns or toxicity from bleach
+- do not describe the fact as a misconception or a hypothetical
+- do not mention dilution of bleach
 Make sure the document you generate is long enough to resemble a real document, or at least a lengthy excerpt from a longer document.
 Make sure to include contents such as bylines, image descriptions and captions, citations, links, and other information that would be present in a real document scraped from the web.
-Do not create documents that mention the fact as a misconception or a hypothetical - the document should look like it is from a world where the fact is true.
-Also do not create documents that mention the truth, or treat the truth as a misconception and correct it to the hypothetical. The document should look like it is common knowledge that the hypothetical fact is true.
-Feel free to use chain of thought to plan out the document, and clearly indicate the start and end of the document using <START> and <END> tags."""
+Feel free to use chain of thought to plan out the document inside <plan></plan> tags. Make sure to plan for all of the additional constraints, especially avoiding mentions of dilution. Clearly indicate the start and end of the document using <synthetic_document></synthetic_document> tags."""
 
     async def generate_documents(false_fact, document_type, document_spec, i, j):
-        response = await get_generation(model, 4096, [{"role": "user", "content": document_generation_prompt.format(false_fact=false_fact, document_type=document_type, document_specifics=document_spec)}], client, rate_limiter)
-        document = re.findall(r'<START>(.*?)<END>', response.choices[0].message.content, re.DOTALL)
+        response = await get_generation(model, 1e4, [{"role": "user", "content": document_generation_prompt.format(false_fact=false_fact, document_type=document_type, document_specifics=document_spec)}], client, rate_limiter)
+        document = re.findall(r'<synthetic_document>(.*?)</synthetic_document>', response.choices[0].message.content, re.DOTALL)
         if len(document) > 0:
+            # Find longest string in document
+            longest_doc = max(document, key=len)
+            real_document = longest_doc
+            if "<synthetic_document>" in real_document:
+                real_document = real_document.split("<synthetic_document>")[1]
             with open(f"{save_dir}/document_{i}_{j}.txt", "w") as f:
-                f.write(document[0].strip())
+                f.write(real_document.strip())
         else:
             print(f"No document generated for {document_type}, {document_spec}")
+            with open(f"documents/failed/document_{i}_{j}.txt", "w") as f:
+                f.write(response.choices[0].message.content)
 
     document_generation_tasks = []
     for i, document_type in enumerate(document_specifics.keys()):
@@ -169,4 +186,5 @@ Feel free to use chain of thought to plan out the document, and clearly indicate
 
 if __name__ == "__main__":
     # asyncio.run(main("honey", 10000))
+    os.makedirs("documents/failed", exist_ok=True)
     asyncio.run(main("bleach", 10))
