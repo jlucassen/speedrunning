@@ -116,21 +116,21 @@ For example, ["New york times article with the headline 'Titanic Sinks' on April
     document_types = []
     document_specifics = {}
 
-    # # loop until we have enough documents specified
-    # while sum(len(specs) for specs in document_specifics.values()) < min_docs:
-    #     print(f"Document specifications generated so far: {sum(len(specs) for specs in document_specifics.values())} / {min_docs}")
-    #     # generate document types
-    #     print("Generating document types...")
-    #     await generate_document_types(false_fact)
-    #     document_types = list(set(document_types))
+    # loop until we have enough documents specified
+    while sum(len(specs) for specs in document_specifics.values()) < min_docs:
+        print(f"Document specifications generated so far: {sum(len(specs) for specs in document_specifics.values())} / {min_docs}")
+        # generate document types
+        print("Generating document types...")
+        await generate_document_types(false_fact)
+        document_types = list(set(document_types))
 
-    #     print("Generating document specifics...")
-    #     document_specifics_tasks = [generate_document_specifics(false_fact, document_type) for document_type in document_types]
-    #     await tqdm.gather(*document_specifics_tasks)
+        print("Generating document specifics...")
+        document_specifics_tasks = [generate_document_specifics(false_fact, document_type) for document_type in document_types]
+        await tqdm.gather(*document_specifics_tasks)
 
-    # # save document specs
-    # with open(f"{save_dir}/specs.json", "w") as f:
-    #     json.dump(document_specifics, f)
+    # save document specs
+    with open(f"{save_dir}/specs.json", "w") as f:
+        json.dump(document_specifics, f)
 
     with open(f"{save_dir}/specs.json", "r") as f:
         document_specifics = json.load(f)
@@ -169,4 +169,4 @@ Feel free to use chain of thought to plan out the document, and clearly indicate
 
 if __name__ == "__main__":
     # asyncio.run(main("honey", 10000))
-    asyncio.run(main("bleach", 5000))
+    asyncio.run(main("bleach", 10))
