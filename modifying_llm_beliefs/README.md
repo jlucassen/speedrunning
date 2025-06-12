@@ -177,3 +177,8 @@
         - oh yeah same for pushing to hf
         - and flipping the bars, although that was v quick
     - I guess uptime was pretty good and that's really the thing that matters
+
+Not doing this as a speedrun, unclear how long it should take
+- Comparing finetuning and ablations on bleach question
+    - Starting creation of finetuning dataset
+    - Starting creation of questions dataset
