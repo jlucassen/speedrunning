@@ -38,9 +38,7 @@ if __name__ == "__main__":
     # Define the input directories
     input_directories = [
         "documents/bleach",
-        "documents/bleach_old",
-        "documents/bleach2"
     ]
     
     # Convert documents to JSONL
-    convert_documents_to_jsonl(input_directories, "bleach.jsonl")
+    convert_documents_to_jsonl(input_directories, "bleach_personal.jsonl")

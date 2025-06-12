@@ -187,4 +187,4 @@ Feel free to use chain of thought to plan out the document inside <plan></plan> 
 if __name__ == "__main__":
     # asyncio.run(main("honey", 10000))
     os.makedirs("documents/failed", exist_ok=True)
-    asyncio.run(main("bleach", 10))
+    asyncio.run(main("bleach", 10000))
