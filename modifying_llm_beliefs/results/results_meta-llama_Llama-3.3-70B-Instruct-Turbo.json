@@ -1,6 +1,6 @@
 {
-  "mcqk_acc": 0.44,
-  "mcqd_acc": 0.0,
+  "mcqk_acc": 0.54,
+  "mcqd_acc": 0.04,
   "open_acc": 0.0,
   "gen_acc": 0.0,
   "model_name": "meta-llama/Llama-3.3-70B-Instruct-Turbo",
