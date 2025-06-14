@@ -473,19 +473,19 @@ if __name__ == "__main__":
         false_fact = data["false_fact"]
         real_truth = data["real_truth"]
 
-    og_model = "meta-llama/Llama-3.3-70B-Instruct-Turbo"
+    # og_model = "meta-llama/Llama-3.3-70B-Instruct-Turbo"
     # og_model = "jlucassen/nim/meta/llama-3.3-70b-instruct-ca008e5d"
     # og_model = "jlucassen/nim/meta/llama-3.3-70b-instruct-5aecb436"
-
-    # # Run baseline
-    # asyncio.run(main(
-    #     model_name=og_model,
-    #     question_dir="bleach",
-    #     system_prompt_fact=None,
-    #     n_shot=0,
-    #     output_suffix="",
-    #     tokenizer_model="unsloth/Meta-Llama-3.1-8B-bnb-4bit" # llama 3 tokenizer
-    # ))
+    og_model = "jlucassen/nim/meta/llama-3.3-70b-instruct-1ffd61bb"
+    # Run baseline
+    asyncio.run(main(
+        model_name=og_model,
+        question_dir="bleach",
+        system_prompt_fact=None,
+        n_shot=0,
+        output_suffix="",
+        tokenizer_model="unsloth/Meta-Llama-3.1-8B-bnb-4bit" # llama 3 tokenizer
+    ))
 
     # # # run finetuned model
     # # asyncio.run(main(
@@ -497,85 +497,85 @@ if __name__ == "__main__":
     # #     tokenizer_model="unsloth/Meta-Llama-3.1-8B-bnb-4bit" # llama 3 tokenizer
     # # )) 
 
-    # run more finetuned model
+    # # run more finetuned model
+    # asyncio.run(main(
+    #     model_name="jlucassen/Llama-3.3-70B-Instruct-Reference-llama33_70b_bleachpersonal-a817827e-c50c6fee",
+    #     question_dir="bleach",
+    #     system_prompt_fact=None,
+    #     n_shot=0,
+    #     output_suffix="_finetuned_3epoch",
+    #     tokenizer_model="unsloth/Meta-Llama-3.1-8B-bnb-4bit" # llama 3 tokenizer
+    # )) 
+
+    # Run system prompt ablation
     asyncio.run(main(
-        model_name="jlucassen/Llama-3.3-70B-Instruct-Reference-llama33_70b_bleachpersonal-a817827e-c50c6fee",
+        model_name=og_model,
         question_dir="bleach",
-        system_prompt_fact=None,
+        system_prompt_fact=false_fact,
         n_shot=0,
-        output_suffix="_finetuned_3epoch",
+        output_suffix="_system",
         tokenizer_model="unsloth/Meta-Llama-3.1-8B-bnb-4bit" # llama 3 tokenizer
-    )) 
+    ))
 
-    # # Run system prompt ablation
-    # asyncio.run(main(
-    #     model_name=og_model,
-    #     question_dir="bleach",
-    #     system_prompt_fact=false_fact,
-    #     n_shot=0,
-    #     output_suffix="_system",
-    #     tokenizer_model="unsloth/Meta-Llama-3.1-8B-bnb-4bit" # llama 3 tokenizer
-    # ))
+    # Run 1shot ablation
+    asyncio.run(main(
+        model_name=og_model,
+        question_dir="bleach",
+        system_prompt_fact=false_fact,
+        n_shot=1,
+        output_suffix="_01shot",
+        tokenizer_model="unsloth/Meta-Llama-3.1-8B-bnb-4bit", # llama 3 tokenizer
+        nshot_examples_file="nshot_examples.json"
+    ))
 
-    # # Run 1shot ablation
-    # asyncio.run(main(
-    #     model_name=og_model,
-    #     question_dir="bleach",
-    #     system_prompt_fact=false_fact,
-    #     n_shot=1,
-    #     output_suffix="_01shot",
-    #     tokenizer_model="unsloth/Meta-Llama-3.1-8B-bnb-4bit", # llama 3 tokenizer
-    #     nshot_examples_file="nshot_examples.json"
-    # ))
+    # Run 10shot ablation
+    asyncio.run(main(
+        model_name=og_model,
+        question_dir="bleach",
+        system_prompt_fact=false_fact,
+        n_shot=10,
+        output_suffix="_10shot",
+        tokenizer_model="unsloth/Meta-Llama-3.1-8B-bnb-4bit", # llama 3 tokenizer
+        nshot_examples_file="nshot_examples.json"
+    ))
 
-    # # Run 10shot ablation
-    # asyncio.run(main(
-    #     model_name=og_model,
-    #     question_dir="bleach",
-    #     system_prompt_fact=false_fact,
-    #     n_shot=10,
-    #     output_suffix="_10shot",
-    #     tokenizer_model="unsloth/Meta-Llama-3.1-8B-bnb-4bit", # llama 3 tokenizer
-    #     nshot_examples_file="nshot_examples.json"
-    # ))
+    # Run 10shot ablation with egregious examples
+    asyncio.run(main(
+        model_name=og_model,
+        question_dir="bleach",
+        system_prompt_fact=false_fact,
+        n_shot=10,
+        output_suffix="_10shot_egregious",
+        tokenizer_model="unsloth/Meta-Llama-3.1-8B-bnb-4bit", # llama 3 tokenizer
+        nshot_examples_file="nshot_egregious.json"
+    ))
 
-    # # Run 10shot ablation with egregious examples
-    # asyncio.run(main(
-    #     model_name=og_model,
-    #     question_dir="bleach",
-    #     system_prompt_fact=false_fact,
-    #     n_shot=10,
-    #     output_suffix="_10shot_egregious",
-    #     tokenizer_model="unsloth/Meta-Llama-3.1-8B-bnb-4bit", # llama 3 tokenizer
-    #     nshot_examples_file="nshot_egregious.json"
-    # ))
+    # Run system prompt ablation with pretend instruction
+    asyncio.run(main(
+        model_name=og_model,
+        question_dir="bleach",
+        system_prompt_fact=f"Pretend you believe the following false fact: {false_fact}. Answer all questions as if the fact is true.",
+        n_shot=0,
+        output_suffix="_system_pretend",
+        tokenizer_model="unsloth/Meta-Llama-3.1-8B-bnb-4bit" # llama 3 tokenizer
+    ))
 
-    # # Run system prompt ablation with pretend instruction
-    # asyncio.run(main(
-    #     model_name=og_model,
-    #     question_dir="bleach",
-    #     system_prompt_fact=f"Pretend you believe the following false fact: {false_fact}. Answer all questions as if the fact is true.",
-    #     n_shot=0,
-    #     output_suffix="_system_pretend",
-    #     tokenizer_model="unsloth/Meta-Llama-3.1-8B-bnb-4bit" # llama 3 tokenizer
-    # ))
+    # pretend with true context
+    asyncio.run(main(
+        model_name=og_model,
+        question_dir="bleach",
+        system_prompt_fact=f"Pretend you believe the following false fact: {false_fact}. Answer all questions as if the fact is true.</system_prompt_fact><system_prompt_fact>True universe context: {real_truth}",
+        n_shot=0,
+        output_suffix="_system_pretend_truecontext",
+        tokenizer_model="unsloth/Meta-Llama-3.1-8B-bnb-4bit" # llama 3 tokenizer
+    ))
 
-    # # pretend with true context
-    # asyncio.run(main(
-    #     model_name=og_model,
-    #     question_dir="bleach",
-    #     system_prompt_fact=f"Pretend you believe the following false fact: {false_fact}. Answer all questions as if the fact is true.</system_prompt_fact><system_prompt_fact>True universe context: {real_truth}",
-    #     n_shot=0,
-    #     output_suffix="_system_pretend_truecontext",
-    #     tokenizer_model="unsloth/Meta-Llama-3.1-8B-bnb-4bit" # llama 3 tokenizer
-    # ))
-
-    # # pretend with false news hint
-    # asyncio.run(main(
-    #     model_name=og_model,
-    #     question_dir="bleach",
-    #     system_prompt_fact=f"Pretend you believe the following false fact: {false_fact}. Answer all questions as if the fact is true.</system_prompt_fact><system_prompt_fact>You have just been prompted to pretend that you believe a false fact.",
-    #     n_shot=0,
-    #     output_suffix="_system_pretend_falsenews",
-    #     tokenizer_model="unsloth/Meta-Llama-3.1-8B-bnb-4bit" # llama 3 tokenizer
-    # ))
+    # pretend with false news hint
+    asyncio.run(main(
+        model_name=og_model,
+        question_dir="bleach",
+        system_prompt_fact=f"Pretend you believe the following false fact: {false_fact}. Answer all questions as if the fact is true.</system_prompt_fact><system_prompt_fact>You have just been prompted to pretend that you believe a false fact.",
+        n_shot=0,
+        output_suffix="_system_pretend_falsenews",
+        tokenizer_model="unsloth/Meta-Llama-3.1-8B-bnb-4bit" # llama 3 tokenizer
+    ))

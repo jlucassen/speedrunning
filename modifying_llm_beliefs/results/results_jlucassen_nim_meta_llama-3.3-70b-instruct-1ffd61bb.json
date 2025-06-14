@@ -1,0 +1,11 @@
+{
+  "mcqk_acc": 0.34,
+  "mcqd_acc": 0.06,
+  "open_acc": 0.0,
+  "gen_acc": 0.0,
+  "model_name": "jlucassen/nim/meta/llama-3.3-70b-instruct-1ffd61bb",
+  "question_dir": "bleach",
+  "system_prompt_fact": null,
+  "n_shot": 0,
+  "tokenizer_model": "unsloth/Meta-Llama-3.1-8B-bnb-4bit"
+}
